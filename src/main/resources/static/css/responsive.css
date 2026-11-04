@@ -1,16 +1,16 @@
 /* ==========================================================================
-   RESPONSIVE DESIGN (Móviles y Tablets) - DEFINITIVO
+   RESPONSIVE + HAMBURGUESA DEFINITIVA
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
-   1. HAMBURGUESA (Oculta en escritorio)
+   ESCRITORIO: Botón oculto, sidebar visible
    -------------------------------------------------------------------------- */
 .btn-hamburguesa {
-    display: none;
+    display: none !important;
 }
 
 .sidebar-overlay {
-    display: none;
+    display: none !important;
     position: fixed;
     top: 0;
     left: 0;
@@ -18,6 +18,7 @@
     height: 100vh;
     background: rgba(15, 23, 42, 0.6);
     z-index: 998;
+    backdrop-filter: blur(2px);
 }
 
 body.sidebar-abierto .sidebar-overlay {
@@ -25,25 +26,39 @@ body.sidebar-abierto .sidebar-overlay {
 }
 
 /* --------------------------------------------------------------------------
-   2. TABLETS Y MÓVILES (Menos de 1024px)
+   MÓVIL Y TABLET (Menos de 1024px)
    -------------------------------------------------------------------------- */
 @media (max-width: 1024px) {
 
-    /* A. Mostrar botón hamburguesa */
+    /* 1. Botón hamburguesa visible y estilizado */
     .btn-hamburguesa {
         display: flex !important;
         align-items: center;
         justify-content: center;
-        background: transparent !important;
-        border: none !important;
+        background: #f1f5f9 !important; /* Fondo gris claro */
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 8px !important;
         cursor: pointer;
-        padding: 0.5rem;
+        padding: 0.4rem 0.6rem !important;
         margin-right: 1rem;
-        color: #0f172a;
+        color: #0f172a !important;
         z-index: 1000;
+        transition: all 0.2s ease;
     }
 
-    /* B. Ocultar el sidebar fuera de la pantalla */
+    .btn-hamburguesa:hover {
+        background: #e2e8f0 !important;
+        transform: scale(1.05);
+    }
+
+    .btn-hamburguesa i,
+    .btn-hamburguesa svg {
+        width: 22px !important;
+        height: 22px !important;
+        stroke-width: 2.5 !important;
+    }
+
+    /* 2. Sidebar escondido a la izquierda */
     .barra-lateral {
         position: fixed !important;
         top: 0 !important;
@@ -52,15 +67,16 @@ body.sidebar-abierto .sidebar-overlay {
         width: 260px !important;
         z-index: 999 !important;
         transform: translateX(-100%) !important;
-        transition: transform 0.3s ease-in-out !important;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
     }
 
-    /* C. Cuando el body tiene la clase, el sidebar se desliza a la vista */
+    /* 3. Sidebar visible cuando se abre */
     body.sidebar-abierto .barra-lateral {
         transform: translateX(0) !important;
     }
 
-    /* D. El contenedor principal ocupa el 100% del ancho */
+    /* 4. El contenido ocupa todo el ancho */
     .contenedor-app {
         display: block !important;
     }
@@ -70,48 +86,19 @@ body.sidebar-abierto .sidebar-overlay {
         margin-left: 0 !important;
         overflow-x: hidden !important;
     }
-
-    /* E. Ajustar las grillas de 4 columnas a 2 */
-    .grid-cuatro-metricas-figma,
-    .rejilla-laboratorios,
-    .rejilla-catalogo,
-    .grid-tres-estadisticas-alumno {
-        grid-template-columns: repeat(2, 1fr) !important;
-    }
-
-    .grid-principal-dash-figma,
-    .grid-inferior-dash-figma {
-        grid-template-columns: 1fr !important;
-    }
-
-    .metadatos-grid-inc {
-        grid-template-columns: 1fr 1fr !important;
-        padding-left: 0 !important;
-        gap: 1.5rem !important;
+    
+    /* 5. Ocultar el saludo en móvil para ahorrar espacio */
+    .datos-perfil {
+        display: none !important;
     }
 }
 
 /* --------------------------------------------------------------------------
-   3. MÓVILES PEQUEÑOS (Menos de 768px)
+   AJUSTES ADICIONALES PARA MÓVIL (Menos de 768px)
    -------------------------------------------------------------------------- */
 @media (max-width: 768px) {
-
     .seccion-checkout {
         padding: 1.5rem 1rem !important;
-    }
-
-    .fila-dashboard-header,
-    .fila-bienvenida,
-    .cabecera-historial-con-filtro {
-        flex-direction: column !important;
-        align-items: flex-start !important;
-        gap: 1rem !important;
-    }
-
-    .selector-fecha-dashboard,
-    .selector-mes-historial {
-        width: 100%;
-        justify-content: space-between;
     }
 
     .grid-cuatro-metricas-figma,
@@ -122,90 +109,11 @@ body.sidebar-abierto .sidebar-overlay {
     .grilla-cubiculos-labs {
         grid-template-columns: 1fr !important;
     }
-
-    .tarjeta-perfil-alumno {
-        flex-direction: column !important;
-        text-align: center;
-        padding: 1.5rem !important;
-    }
-
-    .fila-badges-perfil,
-    .fila-contacto-perfil {
-        justify-content: center;
-    }
-
+    
     .tarjeta-modal,
     .modal-recibo-contenedor,
-    .modal-checkin-ancho,
-    .modal-inventario-contenedor {
+    .modal-checkin-ancho {
         width: 95% !important;
         max-width: 100% !important;
-        margin: 10px;
-        max-height: 95vh !important;
-    }
-
-    .tabla-card-inventario {
-        padding: 0.5rem !important;
-    }
-
-    .tabla-admin-inventario th,
-    .tabla-admin-inventario td {
-        font-size: 0.75rem !important;
-        padding: 0.5rem !important;
-        white-space: nowrap;
-    }
-
-    .grilla-dos-columnas-inv,
-    .rejilla-labs-wizard,
-    .rejilla-epps-grid,
-    .rejilla-horas-seleccion,
-    .matriz-horas-grid {
-        grid-template-columns: 1fr !important;
-    }
-
-    .pie-modal-formulario,
-    .acciones-modal-horarios,
-    .pie-wizard-paso {
-        flex-direction: column-reverse !important;
-        gap: 0.5rem !important;
-    }
-
-    .btn-azul-continuar,
-    .btn-gris-cancelar,
-    .btn-guardar-verde-teal {
-        width: 100% !important;
-    }
-
-    .cabecera-superior {
-        padding: 0 1rem !important;
-    }
-
-    .datos-perfil {
-        display: none !important;
-    }
-
-    .perfil-acciones {
-        gap: 0.8rem !important;
-    }
-}
-
-/* --------------------------------------------------------------------------
-   4. MÓVILES MUY PEQUEÑOS (Menos de 480px)
-   -------------------------------------------------------------------------- */
-@media (max-width: 480px) {
-    .titulo-seccion-catalogo {
-        font-size: 1.3rem !important;
-    }
-
-    .subtitulo-seccion-catalogo {
-        font-size: 0.8rem !important;
-    }
-
-    .num-grande-metrica {
-        font-size: 1.8rem !important;
-    }
-
-    .monto-total-recibo {
-        font-size: 1.2rem !important;
     }
 }
