@@ -16,7 +16,29 @@
                 lucide.createIcons();
             }
         });
+
+        function toggleSidebar() {
+    // Alterna la clase 'sidebar-abierto' en el body
+    document.body.classList.toggle('sidebar-abierto');
+    
+    // Si el menú se abre, agregamos un overlay para cerrar al hacer clic fuera
+    let overlay = document.querySelector('.sidebar-overlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.className = 'sidebar-overlay';
+        overlay.onclick = toggleSidebar; // Al hacer clic en el fondo, cierra el menú
+        document.body.appendChild(overlay);
+    }
+}
+
+// Cerrar el menú si el usuario cambia el tamaño de la ventana a escritorio
+window.addEventListener('resize', () => {
+    if (window.innerWidth > 768) {
+        document.body.classList.remove('sidebar-abierto');
+    }
+});
     </script>
+
 </th:block>
 
 </body>

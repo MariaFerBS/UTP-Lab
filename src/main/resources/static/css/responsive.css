@@ -1,0 +1,186 @@
+/* ==========================================================================
+   RESPONSIVE DESIGN (Móviles y Tablets)
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   TABLETS (Pantallas menores a 1024px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 1024px) {
+    /* Ajustar las grillas de 4 columnas a 2 */
+    .grid-cuatro-metricas-figma,
+    .rejilla-laboratorios,
+    .rejilla-catalogo,
+    .grid-tres-estadisticas-alumno {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    /* Ajustar el dashboard a una sola columna */
+    .grid-principal-dash-figma,
+    .grid-inferior-dash-figma {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Ajustar el layout de dos columnas de incidencias */
+    .metadatos-grid-inc {
+        grid-template-columns: 1fr 1fr !important;
+        padding-left: 0 !important;
+        gap: 1.5rem !important;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   MÓVILES (Pantallas menores a 768px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+    /* 1. SIDEBAR: Ocultarlo o hacerlo tipo hamburguesa */
+    .barra-lateral {
+        width: 70px !important; /* Se encoge */
+        padding: 1rem 0.5rem !important;
+    }
+
+    .barra-lateral .texto-lab,
+    .barra-lateral .item-menu span,
+    .barra-lateral .badge-alerta-roja,
+    .barra-lateral .contador-alerta {
+        display: none !important; /* Ocultamos textos y dejamos solo iconos */
+    }
+
+    .barra-lateral .logo-lateral {
+        justify-content: center;
+        padding-bottom: 1rem;
+    }
+
+    .barra-lateral .navegacion-menu {
+        align-items: center;
+    }
+
+    .barra-lateral .item-menu {
+        justify-content: center;
+        padding: 0.8rem;
+    }
+
+    /* 2. CONTENIDO PRINCIPAL */
+    .seccion-checkout {
+        padding: 1.5rem 1rem !important;
+    }
+
+    /* 3. HEADERS Y FILTROS */
+    .fila-dashboard-header,
+    .fila-bienvenida,
+    .cabecera-historial-con-filtro {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 1rem !important;
+    }
+
+    .selector-fecha-dashboard,
+    .selector-mes-historial {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    /* 4. GRILLAS A 1 COLUMNA */
+    .grid-cuatro-metricas-figma,
+    .rejilla-laboratorios,
+    .rejilla-catalogo,
+    .grid-tres-estadisticas-alumno,
+    .grid-tres-estados-incidencias,
+    .grilla-cubiculos-labs {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* 5. TARJETAS Y MODALES */
+    .tarjeta-perfil-alumno {
+        flex-direction: column !important;
+        text-align: center;
+        padding: 1.5rem !important;
+    }
+
+    .fila-badges-perfil,
+    .fila-contacto-perfil {
+        justify-content: center;
+    }
+
+    /* Modales ocupan toda la pantalla */
+    .tarjeta-modal,
+    .modal-recibo-contenedor,
+    .modal-checkin-ancho,
+    .modal-inventario-contenedor {
+        width: 95% !important;
+        max-width: 100% !important;
+        margin: 10px;
+        max-height: 95vh !important;
+    }
+
+    /* 6. TABLAS DE INVENTARIO (Scroll horizontal) */
+    .tabla-card-inventario {
+        padding: 0.5rem !important;
+    }
+
+    .tabla-admin-inventario th,
+    .tabla-admin-inventario td {
+        font-size: 0.75rem !important;
+        padding: 0.5rem !important;
+        white-space: nowrap;
+    }
+
+    /* 7. FORMULARIOS DEL WIZARD */
+    .grilla-dos-columnas-inv,
+    .rejilla-labs-wizard,
+    .rejilla-epps-grid,
+    .rejilla-horas-seleccion,
+    .matriz-horas-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* 8. BOTONES DE MODALES (Alineados verticalmente) */
+    .pie-modal-formulario,
+    .acciones-modal-horarios,
+    .pie-wizard-paso {
+        flex-direction: column-reverse !important;
+        gap: 0.5rem !important;
+    }
+
+    .btn-azul-continuar,
+    .btn-gris-cancelar,
+    .btn-guardar-verde-teal {
+        width: 100% !important;
+    }
+
+    /* 9. CAMPANITA Y PERFIL */
+    .cabecera-superior {
+        padding: 0 1rem !important;
+    }
+
+    .datos-perfil {
+        display: none !important; /* Ocultamos el saludo en móvil para ahorrar espacio */
+    }
+
+    .perfil-acciones {
+        gap: 0.8rem !important;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   MÓVILES PEQUEÑOS (Menos de 480px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 480px) {
+    /* Ocultar sidebar por completo y agregar un menú hamburguesa si lo deseas */
+    /* Por ahora lo dejamos con iconos para que no se pierda la navegación */
+    
+    .titulo-seccion-catalogo {
+        font-size: 1.3rem !important;
+    }
+
+    .subtitulo-seccion-catalogo {
+        font-size: 0.8rem !important;
+    }
+
+    .num-grande-metrica {
+        font-size: 1.8rem !important;
+    }
+
+    .monto-total-recibo {
+        font-size: 1.2rem !important;
+    }
+}

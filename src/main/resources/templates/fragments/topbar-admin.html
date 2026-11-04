@@ -4,6 +4,12 @@
 
 <!-- ============ FRAGMENT 1: TOPBAR ============ -->
 <header th:fragment="topbar" class="cabecera-superior">
+
+    <!-- BOTÓN HAMBURGUESA (Solo visible en móviles) -->
+    <button class="btn-hamburguesa" onclick="toggleSidebar()">
+        <i data-lucide="menu"></i>
+    </button>
+    
     <div class="logo-cabecera">
         <span class="insignia-utp">UTP</span>
         <span class="texto-lab">+Lab</span>
