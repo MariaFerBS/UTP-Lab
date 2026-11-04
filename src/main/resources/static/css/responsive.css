@@ -1,12 +1,77 @@
 /* ==========================================================================
-   RESPONSIVE DESIGN (Móviles y Tablets)
+   RESPONSIVE DESIGN (Móviles y Tablets) - DEFINITIVO
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
-   TABLETS (Pantallas menores a 1024px)
+   1. HAMBURGUESA (Oculta en escritorio)
+   -------------------------------------------------------------------------- */
+.btn-hamburguesa {
+    display: none;
+}
+
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.6);
+    z-index: 998;
+}
+
+body.sidebar-abierto .sidebar-overlay {
+    display: block !important;
+}
+
+/* --------------------------------------------------------------------------
+   2. TABLETS Y MÓVILES (Menos de 1024px)
    -------------------------------------------------------------------------- */
 @media (max-width: 1024px) {
-    /* Ajustar las grillas de 4 columnas a 2 */
+
+    /* A. Mostrar botón hamburguesa */
+    .btn-hamburguesa {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        background: transparent !important;
+        border: none !important;
+        cursor: pointer;
+        padding: 0.5rem;
+        margin-right: 1rem;
+        color: #0f172a;
+        z-index: 1000;
+    }
+
+    /* B. Ocultar el sidebar fuera de la pantalla */
+    .barra-lateral {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        height: 100vh !important;
+        width: 260px !important;
+        z-index: 999 !important;
+        transform: translateX(-100%) !important;
+        transition: transform 0.3s ease-in-out !important;
+    }
+
+    /* C. Cuando el body tiene la clase, el sidebar se desliza a la vista */
+    body.sidebar-abierto .barra-lateral {
+        transform: translateX(0) !important;
+    }
+
+    /* D. El contenedor principal ocupa el 100% del ancho */
+    .contenedor-app {
+        display: block !important;
+    }
+
+    .area-principal {
+        width: 100% !important;
+        margin-left: 0 !important;
+        overflow-x: hidden !important;
+    }
+
+    /* E. Ajustar las grillas de 4 columnas a 2 */
     .grid-cuatro-metricas-figma,
     .rejilla-laboratorios,
     .rejilla-catalogo,
@@ -14,13 +79,11 @@
         grid-template-columns: repeat(2, 1fr) !important;
     }
 
-    /* Ajustar el dashboard a una sola columna */
     .grid-principal-dash-figma,
     .grid-inferior-dash-figma {
         grid-template-columns: 1fr !important;
     }
 
-    /* Ajustar el layout de dos columnas de incidencias */
     .metadatos-grid-inc {
         grid-template-columns: 1fr 1fr !important;
         padding-left: 0 !important;
@@ -29,42 +92,14 @@
 }
 
 /* --------------------------------------------------------------------------
-   MÓVILES (Pantallas menores a 768px)
+   3. MÓVILES PEQUEÑOS (Menos de 768px)
    -------------------------------------------------------------------------- */
 @media (max-width: 768px) {
-    /* 1. SIDEBAR: Ocultarlo o hacerlo tipo hamburguesa */
-    .barra-lateral {
-        width: 70px !important; /* Se encoge */
-        padding: 1rem 0.5rem !important;
-    }
 
-    .barra-lateral .texto-lab,
-    .barra-lateral .item-menu span,
-    .barra-lateral .badge-alerta-roja,
-    .barra-lateral .contador-alerta {
-        display: none !important; /* Ocultamos textos y dejamos solo iconos */
-    }
-
-    .barra-lateral .logo-lateral {
-        justify-content: center;
-        padding-bottom: 1rem;
-    }
-
-    .barra-lateral .navegacion-menu {
-        align-items: center;
-    }
-
-    .barra-lateral .item-menu {
-        justify-content: center;
-        padding: 0.8rem;
-    }
-
-    /* 2. CONTENIDO PRINCIPAL */
     .seccion-checkout {
         padding: 1.5rem 1rem !important;
     }
 
-    /* 3. HEADERS Y FILTROS */
     .fila-dashboard-header,
     .fila-bienvenida,
     .cabecera-historial-con-filtro {
@@ -79,7 +114,6 @@
         justify-content: space-between;
     }
 
-    /* 4. GRILLAS A 1 COLUMNA */
     .grid-cuatro-metricas-figma,
     .rejilla-laboratorios,
     .rejilla-catalogo,
@@ -89,7 +123,6 @@
         grid-template-columns: 1fr !important;
     }
 
-    /* 5. TARJETAS Y MODALES */
     .tarjeta-perfil-alumno {
         flex-direction: column !important;
         text-align: center;
@@ -101,7 +134,6 @@
         justify-content: center;
     }
 
-    /* Modales ocupan toda la pantalla */
     .tarjeta-modal,
     .modal-recibo-contenedor,
     .modal-checkin-ancho,
@@ -112,7 +144,6 @@
         max-height: 95vh !important;
     }
 
-    /* 6. TABLAS DE INVENTARIO (Scroll horizontal) */
     .tabla-card-inventario {
         padding: 0.5rem !important;
     }
@@ -124,7 +155,6 @@
         white-space: nowrap;
     }
 
-    /* 7. FORMULARIOS DEL WIZARD */
     .grilla-dos-columnas-inv,
     .rejilla-labs-wizard,
     .rejilla-epps-grid,
@@ -133,7 +163,6 @@
         grid-template-columns: 1fr !important;
     }
 
-    /* 8. BOTONES DE MODALES (Alineados verticalmente) */
     .pie-modal-formulario,
     .acciones-modal-horarios,
     .pie-wizard-paso {
@@ -147,13 +176,12 @@
         width: 100% !important;
     }
 
-    /* 9. CAMPANITA Y PERFIL */
     .cabecera-superior {
         padding: 0 1rem !important;
     }
 
     .datos-perfil {
-        display: none !important; /* Ocultamos el saludo en móvil para ahorrar espacio */
+        display: none !important;
     }
 
     .perfil-acciones {
@@ -162,12 +190,9 @@
 }
 
 /* --------------------------------------------------------------------------
-   MÓVILES PEQUEÑOS (Menos de 480px)
+   4. MÓVILES MUY PEQUEÑOS (Menos de 480px)
    -------------------------------------------------------------------------- */
 @media (max-width: 480px) {
-    /* Ocultar sidebar por completo y agregar un menú hamburguesa si lo deseas */
-    /* Por ahora lo dejamos con iconos para que no se pierda la navegación */
-    
     .titulo-seccion-catalogo {
         font-size: 1.3rem !important;
     }
@@ -182,76 +207,5 @@
 
     .monto-total-recibo {
         font-size: 1.2rem !important;
-    }
-}
-
-/* ==========================================================================
-   CORRECCIÓN DEFINITIVA PARA MÓVIL Y TABLET (HAMBURGUESA)
-   ========================================================================== */
-
-/* 1. En escritorio, el botón NO se ve */
-.btn-hamburguesa {
-    display: none;
-}
-
-/* 2. El fondo oscuro (overlay) está oculto por defecto */
-.sidebar-overlay {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(15, 23, 42, 0.6);
-    z-index: 998;
-}
-
-/* 3. Cuando el body tiene la clase 'sidebar-abierto', mostramos el overlay */
-body.sidebar-abierto .sidebar-overlay {
-    display: block;
-}
-
-/* --------------------------------------------------------------------------
-   COMPORTAMIENTO PARA PANTALLAS MENORES A 1024px
-   -------------------------------------------------------------------------- */
-@media (max-width: 1024px) {
-    /* Mostrar el botón de hamburguesa */
-    .btn-hamburguesa {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: transparent;
-        border: none;
-        cursor: pointer;
-        padding: 0.5rem;
-        margin-right: 1rem;
-    }
-
-    /* Ocultar el sidebar fuera de la pantalla */
-    .barra-lateral {
-        position: fixed !important;
-        top: 0;
-        left: 0;
-        height: 100vh;
-        z-index: 999;
-        transform: translateX(-100%); /* Escondido a la izquierda */
-        transition: transform 0.3s ease-in-out;
-        width: 260px !important;
-        padding: 1.25rem 0.75rem !important;
-    }
-
-    /* Cuando se abre, se desliza a la vista */
-    body.sidebar-abierto .barra-lateral {
-        transform: translateX(0);
-    }
-
-    /* El contenido principal ocupa TODO el ancho */
-    .contenedor-app {
-        display: block !important; /* Rompe el flex para que no se apile */
-    }
-
-    .area-principal {
-        width: 100% !important;
-        margin-left: 0 !important;
     }
 }

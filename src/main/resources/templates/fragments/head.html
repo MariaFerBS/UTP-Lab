@@ -11,22 +11,22 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
     <!-- 1. CSS GLOBAL (Base) -->
-    <link rel="stylesheet" th:href="@{/css/base.css}" />
+<link rel="stylesheet" th:href="@{/css/base.css}" />
 
-    <!-- 2. CSS DINÁMICO (Solo uno se carga según la URL) -->
-    <th:block th:if="${#strings.contains(requestURI, 'alumno')}">
-        <link rel="stylesheet" th:href="@{/css/alumno.css}" />
-    </th:block>
+<!-- 2. CSS DINÁMICO -->
+<th:block th:if="${#strings.contains(requestURI, 'alumno')}">
+    <link rel="stylesheet" th:href="@{/css/alumno.css}" />
+</th:block>
+<th:block th:if="${#strings.contains(requestURI, 'admin')}">
+    <link rel="stylesheet" th:href="@{/css/admin.css}" />
+</th:block>
+<th:block th:if="${#strings.contains(requestURI, 'login') or #strings.contains(requestURI, 'recuperar') or #strings.contains(requestURI, 'cambiar-password')}">
+    <link rel="stylesheet" th:href="@{/css/login.css}" />
+</th:block>
 
-    <th:block th:if="${#strings.contains(requestURI, 'admin')}">
-        <link rel="stylesheet" th:href="@{/css/admin.css}" />
-    </th:block>
+<!-- 3. MODALES -->
+<link rel="stylesheet" th:href="@{/css/modales.css}" />
 
-    <th:block th:if="${#strings.contains(requestURI, 'login') or #strings.contains(requestURI, 'recuperar') or #strings.contains(requestURI, 'cambiar-password')}">
-        <link rel="stylesheet" th:href="@{/css/login.css}" />
-    </th:block>
-
-    <!-- 3. MODALES AL FINAL (Siempre se carga, y siempre sobrescribe a los anteriores) -->
-    <link rel="stylesheet" th:href="@{/css/modales.css}" />
-    <link rel="stylesheet" th:href="@{/css/responsive.css}" />
+<!-- 4. RESPONSIVE (SIEMPRE AL FINAL) -->
+<link rel="stylesheet" th:href="@{/css/responsive.css}" />
 </head>

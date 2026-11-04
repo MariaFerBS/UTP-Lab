@@ -18,15 +18,13 @@
         });
 
         function toggleSidebar() {
-    // Abre o cierra el menú
     document.body.classList.toggle('sidebar-abierto');
     
-    // Crea el fondo oscuro si no existe
     let overlay = document.querySelector('.sidebar-overlay');
     if (!overlay) {
         overlay = document.createElement('div');
         overlay.className = 'sidebar-overlay';
-        overlay.onclick = toggleSidebar; // Cierra al hacer clic fuera
+        overlay.onclick = toggleSidebar;
         document.body.appendChild(overlay);
     }
 }
