@@ -186,26 +186,15 @@
 }
 
 /* ==========================================================================
-   RESPONSIVE MÓVIL - CORRECCIÓN DEL SIDEBAR Y HAMBURGUESA
+   CORRECCIÓN DEFINITIVA PARA MÓVIL Y TABLET (HAMBURGUESA)
    ========================================================================== */
 
-/* En escritorio, el botón hamburguesa NO se ve */
+/* 1. En escritorio, el botón NO se ve */
 .btn-hamburguesa {
     display: none;
-    background: transparent;
-    border: none;
-    color: #0f172a;
-    cursor: pointer;
-    padding: 0.5rem;
-    margin-right: 0.5rem;
 }
 
-.btn-hamburguesa i {
-    width: 24px;
-    height: 24px;
-}
-
-/* Fondo oscuro detrás del menú (solo móvil) */
+/* 2. El fondo oscuro (overlay) está oculto por defecto */
 .sidebar-overlay {
     display: none;
     position: fixed;
@@ -213,26 +202,32 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(15, 23, 42, 0.5);
+    background: rgba(15, 23, 42, 0.6);
     z-index: 998;
 }
 
+/* 3. Cuando el body tiene la clase 'sidebar-abierto', mostramos el overlay */
 body.sidebar-abierto .sidebar-overlay {
     display: block;
 }
 
 /* --------------------------------------------------------------------------
-   COMPORTAMIENTO EN MÓVIL (Menos de 768px)
+   COMPORTAMIENTO PARA PANTALLAS MENORES A 1024px
    -------------------------------------------------------------------------- */
-@media (max-width: 768px) {
-    /* 1. Mostrar el botón de hamburguesa */
+@media (max-width: 1024px) {
+    /* Mostrar el botón de hamburguesa */
     .btn-hamburguesa {
         display: flex;
         align-items: center;
         justify-content: center;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        padding: 0.5rem;
+        margin-right: 1rem;
     }
 
-    /* 2. Ocultar el sidebar fuera de la pantalla con posición fija */
+    /* Ocultar el sidebar fuera de la pantalla */
     .barra-lateral {
         position: fixed !important;
         top: 0;
@@ -241,16 +236,16 @@ body.sidebar-abierto .sidebar-overlay {
         z-index: 999;
         transform: translateX(-100%); /* Escondido a la izquierda */
         transition: transform 0.3s ease-in-out;
-        width: 250px !important;
+        width: 260px !important;
         padding: 1.25rem 0.75rem !important;
     }
 
-    /* 3. Cuando se abre, se desliza a la vista */
+    /* Cuando se abre, se desliza a la vista */
     body.sidebar-abierto .barra-lateral {
         transform: translateX(0);
     }
 
-    /* 4. El contenido principal ocupa TODO el ancho */
+    /* El contenido principal ocupa TODO el ancho */
     .contenedor-app {
         display: block !important; /* Rompe el flex para que no se apile */
     }
@@ -258,21 +253,5 @@ body.sidebar-abierto .sidebar-overlay {
     .area-principal {
         width: 100% !important;
         margin-left: 0 !important;
-    }
-
-    /* 5. Ajustar los textos del menú para que se vean de nuevo */
-    .barra-lateral .texto-lab,
-    .barra-lateral .item-menu span,
-    .barra-lateral .badge-alerta-roja {
-        display: block !important;
-    }
-
-    .barra-lateral .logo-lateral {
-        justify-content: flex-start;
-    }
-
-    .barra-lateral .item-menu {
-        justify-content: flex-start;
-        padding: 0.75rem 1rem;
     }
 }

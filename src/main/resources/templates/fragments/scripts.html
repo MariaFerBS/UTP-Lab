@@ -18,15 +18,15 @@
         });
 
         function toggleSidebar() {
-    // Alterna la clase 'sidebar-abierto' en el body
+    // Abre o cierra el menú
     document.body.classList.toggle('sidebar-abierto');
     
-    // Si el menú se abre, agregamos un overlay para cerrar al hacer clic fuera
+    // Crea el fondo oscuro si no existe
     let overlay = document.querySelector('.sidebar-overlay');
     if (!overlay) {
         overlay = document.createElement('div');
         overlay.className = 'sidebar-overlay';
-        overlay.onclick = toggleSidebar; // Al hacer clic en el fondo, cierra el menú
+        overlay.onclick = toggleSidebar; // Cierra al hacer clic fuera
         document.body.appendChild(overlay);
     }
 }
