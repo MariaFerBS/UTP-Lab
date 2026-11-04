@@ -497,3 +497,76 @@ body {
   margin-left: auto; /* Empuja el badge a la derecha */
 }
 
+/* ==========================================================================
+   HAMBURGUESA Y SIDEBAR MÓVIL (VERSIÓN FORZADA)
+   ========================================================================== */
+
+/* 1. Botón oculto en escritorio */
+.btn-hamburguesa {
+    display: none;
+}
+
+/* 2. Overlay (fondo oscuro) */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.6);
+    z-index: 998;
+}
+
+body.sidebar-abierto .sidebar-overlay {
+    display: block;
+}
+
+/* 3. Comportamiento en pantallas pequeñas */
+@media (max-width: 1024px) {
+    /* Mostrar botón hamburguesa */
+    .btn-hamburguesa {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        background: transparent !important;
+        border: none !important;
+        cursor: pointer;
+        padding: 0.5rem;
+        margin-right: 1rem;
+        z-index: 1000;
+    }
+
+    /* Ocultar el sidebar fuera de la pantalla */
+    .barra-lateral {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        height: 100vh !important;
+        width: 260px !important;
+        z-index: 999 !important;
+        transform: translateX(-100%) !important;
+        transition: transform 0.3s ease-in-out !important;
+    }
+
+    /* Cuando el body tiene la clase, el sidebar se muestra */
+    body.sidebar-abierto .barra-lateral {
+        transform: translateX(0) !important;
+    }
+
+    /* El contenido principal ocupa el 100% */
+    .contenedor-app {
+        display: block !important;
+    }
+
+    .area-principal {
+        width: 100% !important;
+        margin-left: 0 !important;
+        overflow-x: hidden !important;
+    }
+
+    /* Ajustes para que las tarjetas de laboratorio no se desborden */
+    .rejilla-laboratorios {
+        grid-template-columns: 1fr !important;
+    }
+}
