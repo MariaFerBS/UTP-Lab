@@ -184,3 +184,95 @@
         font-size: 1.2rem !important;
     }
 }
+
+/* ==========================================================================
+   RESPONSIVE MÓVIL - CORRECCIÓN DEL SIDEBAR Y HAMBURGUESA
+   ========================================================================== */
+
+/* En escritorio, el botón hamburguesa NO se ve */
+.btn-hamburguesa {
+    display: none;
+    background: transparent;
+    border: none;
+    color: #0f172a;
+    cursor: pointer;
+    padding: 0.5rem;
+    margin-right: 0.5rem;
+}
+
+.btn-hamburguesa i {
+    width: 24px;
+    height: 24px;
+}
+
+/* Fondo oscuro detrás del menú (solo móvil) */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.5);
+    z-index: 998;
+}
+
+body.sidebar-abierto .sidebar-overlay {
+    display: block;
+}
+
+/* --------------------------------------------------------------------------
+   COMPORTAMIENTO EN MÓVIL (Menos de 768px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+    /* 1. Mostrar el botón de hamburguesa */
+    .btn-hamburguesa {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* 2. Ocultar el sidebar fuera de la pantalla con posición fija */
+    .barra-lateral {
+        position: fixed !important;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        z-index: 999;
+        transform: translateX(-100%); /* Escondido a la izquierda */
+        transition: transform 0.3s ease-in-out;
+        width: 250px !important;
+        padding: 1.25rem 0.75rem !important;
+    }
+
+    /* 3. Cuando se abre, se desliza a la vista */
+    body.sidebar-abierto .barra-lateral {
+        transform: translateX(0);
+    }
+
+    /* 4. El contenido principal ocupa TODO el ancho */
+    .contenedor-app {
+        display: block !important; /* Rompe el flex para que no se apile */
+    }
+
+    .area-principal {
+        width: 100% !important;
+        margin-left: 0 !important;
+    }
+
+    /* 5. Ajustar los textos del menú para que se vean de nuevo */
+    .barra-lateral .texto-lab,
+    .barra-lateral .item-menu span,
+    .barra-lateral .badge-alerta-roja {
+        display: block !important;
+    }
+
+    .barra-lateral .logo-lateral {
+        justify-content: flex-start;
+    }
+
+    .barra-lateral .item-menu {
+        justify-content: flex-start;
+        padding: 0.75rem 1rem;
+    }
+}
