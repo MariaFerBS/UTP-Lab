@@ -361,6 +361,7 @@ function irABoleta() {
   ocultarTodasSecciones();
   document.getElementById('seccionPasoBoleta').style.display = 'block';
   actualizarIndicadores(pasoActual);
+  
 }
 
 let totalIntegrantes = 1;
@@ -525,6 +526,7 @@ function cargarBoletaResumen() {
     document.getElementById('boletaMontoTotalTxt').innerText = `S/ ${costoEppsTotal.toFixed(2)}`;
     document.getElementById('inputMontoTotalFinal').value = costoEppsTotal.toFixed(2);
     document.getElementById('pasarelaTotalMonto').innerText = `S/ ${costoEppsTotal.toFixed(2)}`;
+    document.getElementById('montoQrText').innerText = `S/ ${costoEppsTotal.toFixed(2)}`;
     document.getElementById('btnAccionBoleta').innerText = "Ir a pagar →";
   } else {
     document.getElementById('filaCobroEpps').style.display = 'none';
@@ -583,6 +585,48 @@ function procesarBotonFinalBoleta() {
 }
 
 function enviarFormularioFinal() {
+  const metodo = document.getElementById('inputMetodoPagoSeleccionado').value;
+
+  if (metodo === 'TARJETA') {
+    const num = document.getElementById('inputNumeroTarjeta').value.replace(/\s/g, '');
+    const titular = document.getElementById('inputTitularTarjeta').value.trim();
+    const fecha = document.getElementById('inputFechaExpTarjeta').value.trim();
+    const cvv = document.getElementById('inputCvvTarjeta').value.trim();
+
+    if (!num || num.length < 16) {
+      alert('❌ Ingresa un número de tarjeta válido (16 dígitos).');
+      return;
+    }
+    if (!titular) {
+      alert('❌ Ingresa el nombre del titular.');
+      return;
+    }
+    if (!fecha || !cvv) {
+      alert('❌ Completa la fecha de expiración y el CVV.');
+      return;
+    }
+
+    // Crear campos ocultos en el form
+    const form = document.getElementById('formReservaCompleta');
+    
+    function crearHidden(name, value) {
+      let input = document.getElementById('hidden_' + name);
+      if (!input) {
+        input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = name;
+        input.id = 'hidden_' + name;
+        form.appendChild(input);
+      }
+      input.value = value;
+    }
+    
+    crearHidden('numeroTarjeta', num);
+    crearHidden('titularTarjeta', titular);
+    crearHidden('fechaExpTarjeta', fecha);
+    crearHidden('cvvTarjeta', cvv);
+  }
+
   validarYEnviarReserva();
 }
 
@@ -598,6 +642,18 @@ function seleccionarMetodo(opc, met) {
   document.querySelectorAll('.opcion-metodo-pago').forEach(o => o.classList.remove('seleccionado'));
   opc.classList.add('seleccionado');
   document.getElementById('inputMetodoPagoSeleccionado').value = met;
+
+  // Mostrar/ocultar secciones
+  const seccionQr = document.getElementById('seccionQrPago');
+  const seccionTarjeta = document.getElementById('seccionTarjetaPago');
+
+  if (met === 'TARJETA') {
+    seccionQr.style.display = 'none';
+    seccionTarjeta.style.display = 'block';
+  } else {
+    seccionQr.style.display = 'block';
+    seccionTarjeta.style.display = 'none';
+  }
 }
 
 function abrirModalResumen(tarjeta) {

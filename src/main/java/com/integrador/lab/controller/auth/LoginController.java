@@ -55,7 +55,10 @@ public class LoginController {
             if (resultado.esAdmin()) {
                 sesion.setAttribute("usuarioLogueado", resultado);
                 return "redirect:/admin/dashboard";
-            } else {
+            } else if (resultado.esEncargado()) {
+                sesion.setAttribute("usuarioLogueado", resultado);
+                return "redirect:/encargado/dashboard";
+            } else {    
                 Alumno alumno = alumnoRepositorio.findById(resultado.getCodigo()).orElse(null);
                 
                 // ⭐ NUEVA VALIDACIÓN: Verificar si su carrera tiene laboratorios

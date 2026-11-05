@@ -40,6 +40,7 @@ import com.integrador.lab.repository.ReservaItemRepository;
 import com.integrador.lab.repository.ReservaRepository;
 import com.integrador.lab.repository.SancionRepository;
 import com.integrador.lab.service.EmailService;
+import com.integrador.lab.service.PagoSimulacionService;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -74,6 +75,9 @@ public class AlumnoPortalController {
     @Autowired 
     private EmailService emailService;
 
+    @Autowired 
+    private PagoSimulacionService pagoSimulacionService;
+
     // =========================================================================
     // 1. PANTALLA PRINCIPAL: LABORATORIOS Y GESTIÓN DE RESERVAS
     // =========================================================================
@@ -81,22 +85,17 @@ public class AlumnoPortalController {
     @Transactional(readOnly = true)
     public String verLaboratorios(HttpSession sesion, Model modelo) {
         Object usuario = sesion.getAttribute("usuarioLogueado");
-        if (usuario == null) {
-            return "redirect:/login";
-        }
+        if (usuario == null) return "redirect:/login";
 
         Alumno alumno = (Alumno) usuario;
 
-        // 1. Consultar sanciones pendientes
         List<Sancion> sancionesPendientes = sancionRepositorio.findByAlumno_IdEstudAndEstado(alumno.getIdEstud(), "PENDIENTE");
         long incidenciasPendientes = sancionesPendientes.size();
 
         String estadoCuenta = (alumno.getEstadoCuenta() != null) ? alumno.getEstadoCuenta().trim().toUpperCase() : "";
         boolean estaBloqueado = incidenciasPendientes > 0 || "BLOQUEADO_POR_DEUDA".equals(estadoCuenta);
 
-        // 2. Obtener la carrera y validar si permite laboratorios
         String idCarrera = (alumno.getCarrera() != null) ? alumno.getCarrera().getIdCarrera() : null;
-        
         List<Laboratorio> labs = new ArrayList<>();
         boolean puedeReservarPorCarrera = false;
 
@@ -105,7 +104,6 @@ public class AlumnoPortalController {
             puedeReservarPorCarrera = !labs.isEmpty();
         }
 
-        // 3. Separar productos entre Insumos y EPPs
         List<Producto> todosLosProductos = productoRepositorio.findAll();
         List<Producto> insumos = new ArrayList<>();
         List<Producto> epps = new ArrayList<>();
@@ -118,7 +116,6 @@ public class AlumnoPortalController {
             }
         }
 
-        // 4. Contar reservas del día (TODAS MENOS CANCELADAS)
         List<ReservaIntegrante> participaciones = reservaIntegranteRepositorio.findByAlumno_IdEstud(alumno.getIdEstud());
         LocalDate hoy = LocalDate.now();
         List<String> idsReservasHoy = new ArrayList<>();
@@ -128,7 +125,6 @@ public class AlumnoPortalController {
             if (r == null || r.getFechaReserva() == null || !hoy.equals(r.getFechaReserva())) continue;
 
             String estado = r.getEstado() == null ? "" : r.getEstado().trim().toUpperCase();
-            
             if (!estado.equals("CANCELADA")) {
                 if (!idsReservasHoy.contains(r.getIdReserva())) {
                     idsReservasHoy.add(r.getIdReserva());
@@ -142,7 +138,6 @@ public class AlumnoPortalController {
         modelo.addAttribute("reservasRestantes", Math.max(0, 2 - reservasHoy));
         modelo.addAttribute("limiteDiarioAlcanzado", reservasHoy >= 2);
 
-        // 5. Listar mis reservas activas
         List<ReservaActivaDto> misReservas = new ArrayList<>();
         for (ReservaIntegrante ri : participaciones) {
             Reserva r = ri.getReserva();
@@ -161,7 +156,6 @@ public class AlumnoPortalController {
             }
         }
 
-        // 6. Enviar todo a la vista
         modelo.addAttribute("alumno", alumno);
         modelo.addAttribute("estaBloqueado", estaBloqueado);
         modelo.addAttribute("numIncidencias", incidenciasPendientes);
@@ -231,6 +225,10 @@ public class AlumnoPortalController {
             @RequestParam(value = "eppsIds", required = false) List<String> eppsIds,
             @RequestParam("montoTotal") BigDecimal montoTotal,
             @RequestParam(value = "metodoPago", defaultValue = "GRATUITO") String metodoPago,
+            @RequestParam(value = "numeroTarjeta", required = false) String numeroTarjeta,
+            @RequestParam(value = "titularTarjeta", required = false) String titularTarjeta,
+            @RequestParam(value = "fechaExpTarjeta", required = false) String fechaExpTarjeta,
+            @RequestParam(value = "cvvTarjeta", required = false) String cvvTarjeta,
             HttpSession sesion, RedirectAttributes redirectAttributes) {
 
         Object usuario = sesion.getAttribute("usuarioLogueado");
@@ -253,6 +251,17 @@ public class AlumnoPortalController {
 
         if (tieneSancion || cuentaBloqueada) return "redirect:/alumno/laboratorios";
 
+        // ⭐ SIMULAR EL PAGO
+        PagoSimulacionService.ResultadoPago resultadoPago =
+            pagoSimulacionService.procesarPago(
+                metodoPago, numeroTarjeta, titularTarjeta, 
+                fechaExpTarjeta, cvvTarjeta, montoTotal);
+
+        if (!resultadoPago.isExitoso()) {
+            redirectAttributes.addFlashAttribute("errorReserva", resultadoPago.getMensaje());
+            return "redirect:/alumno/laboratorios";
+        }
+
         Optional<Laboratorio> labOpt = laboratorioRepositorio.findById(idLab);
         if (labOpt.isEmpty()) return "redirect:/alumno/laboratorios";
         Laboratorio lab = labOpt.get();
@@ -272,7 +281,7 @@ public class AlumnoPortalController {
         if (fecha.isBefore(LocalDate.now())) return "redirect:/alumno/laboratorios";
         if (!horaFin.isAfter(horaInicio)) return "redirect:/alumno/laboratorios";
 
-        // 1. LÍMITE DE DOS RESERVAS DIARIAS (TODAS MENOS CANCELADAS)
+        // 1. LÍMITE DE DOS RESERVAS DIARIAS
         List<ReservaIntegrante> participacionesAlumno = reservaIntegranteRepositorio.findByAlumno_IdEstud(alumnoLogueado.getIdEstud());
         List<String> idsReservasDelDia = new ArrayList<>();
 
@@ -414,22 +423,71 @@ public class AlumnoPortalController {
                 nuevaReserva,
                 LocalDateTime.now(),
                 montoTotal,
-                "PAGO_" + metodoPago.toUpperCase()
+                resultadoPago.getTransaccion() != null
+                        ? metodoPago.toUpperCase() + " · " + resultadoPago.getTransaccion()
+                        : "GRATUITO"
         );
         boletaRepositorio.save(boleta);
 
-        // ⭐ ENVIAR CORREO DE CONFIRMACIÓN
+        // ⭐ ENVIAR CORREO DE CONFIRMACIÓN (CON DETALLE DE BOLETA SI HAY PAGO)
         try {
             String correoDestino = alumnoLogueado.getIdEstud().toLowerCase() + "@utp.edu.pe";
-            String asunto = "ESTE CORREO ES DE PRUEBA ✅ Confirmación de Reserva - UTP +Lab";
-            String mensaje = "Hola " + alumnoLogueado.getNombre() + ",\n\n" +
-                    "Tu reserva en " + lab.getNombre() + " (" + lab.getUbicacionCubiculo() + ") ha sido confirmada.\n" +
-                    "Fecha: " + fecha + "\n" +
-                    "Horario: " + horaInicio + " - " + horaFin + "\n\n" +
-                    "Recuerda llegar 10 minutos antes para tu check-in.\n\n" +
-                    "Atentamente,\nEl equipo de UTP +Lab";
+            String asunto;
+            String mensaje;
+
+            if (montoTotal.compareTo(BigDecimal.ZERO) > 0) {
+                // CORREO CON DETALLE DE BOLETA (SI HAY PAGO)
+                asunto = "🧾 Boleta de Pago - Reserva Confirmada - UTP +Lab";
+                
+                StringBuilder detalleItems = new StringBuilder();
+                if (insumosIds != null && !insumosIds.isEmpty()) {
+                    detalleItems.append("\n📦 INSUMOS PRESTADOS:\n");
+                    for (String idInsumo : insumosIds) {
+                        productoRepositorio.findById(idInsumo).ifPresent(p -> 
+                            detalleItems.append("   - ").append(p.getNombre()).append("\n")
+                        );
+                    }
+                }
+                if (eppsIds != null && !eppsIds.isEmpty()) {
+                    detalleItems.append("\n🦺 EQUIPOS DE PROTECCIÓN (EPPs):\n");
+                    for (String idEpp : eppsIds) {
+                        productoRepositorio.findById(idEpp).ifPresent(p -> 
+                            detalleItems.append("   - ").append(p.getNombre()).append("\n")
+                        );
+                    }
+                }
+
+                mensaje = "Hola " + alumnoLogueado.getNombre() + ",\n\n" +
+                        "Tu reserva ha sido confirmada y tu pago ha sido procesado exitosamente.\n\n" +
+                        "═══════════════════════════════════════\n" +
+                        "🧾 BOLETA DE PAGO\n" +
+                        "═══════════════════════════════════════\n" +
+                        "Código de Boleta: " + idBoleta + "\n" +
+                        "Código de Reserva: " + idReserva + "\n" +
+                        "Laboratorio: " + lab.getNombre() + " (" + lab.getUbicacionCubiculo() + ")\n" +
+                        "Fecha: " + fecha + "\n" +
+                        "Horario: " + horaInicio + " - " + horaFin + "\n" +
+                        detalleItems.toString() + "\n" +
+                        "───────────────────────────────────────\n" +
+                        "💳 MÉTODO DE PAGO: " + metodoPago.toUpperCase() + "\n" +
+                        "💰 TOTAL PAGADO: S/ " + montoTotal.setScale(2) + "\n" +
+                        "═══════════════════════════════════════\n\n" +
+                        "Gracias por tu pago. Recuerda llegar 10 minutos antes para tu check-in.\n\n" +
+                        "Atentamente,\nEl equipo de UTP +Lab";
+            } else {
+                // CORREO SIMPLE (RESERVA GRATUITA)
+                asunto = "✅ Confirmación de Reserva - UTP +Lab";
+                mensaje = "Hola " + alumnoLogueado.getNombre() + ",\n\n" +
+                        "Tu reserva en " + lab.getNombre() + " (" + lab.getUbicacionCubiculo() + ") ha sido confirmada.\n\n" +
+                        "Fecha: " + fecha + "\n" +
+                        "Horario: " + horaInicio + " - " + horaFin + "\n" +
+                        "Código de Reserva: " + idReserva + "\n\n" +
+                        "Recuerda llegar 10 minutos antes para tu check-in.\n\n" +
+                        "Atentamente,\nEl equipo de UTP +Lab";
+            }
 
             emailService.enviarCorreo(correoDestino, asunto, mensaje);
+            System.out.println("✅ Correo enviado a: " + correoDestino + " | Asunto: " + asunto);
         } catch (Exception e) {
             System.out.println("❌ Error al enviar correo: " + e.getMessage());
         }
@@ -486,7 +544,6 @@ public class AlumnoPortalController {
             return "redirect:/login";
         }
 
-        // FECHA DE CONSULTA
         LocalDate fechaConsulta;
         try {
             fechaConsulta = (mes != null && !mes.isEmpty()) 
@@ -507,14 +564,12 @@ public class AlumnoPortalController {
         
         String mesInput = String.format("%04d-%02d", fechaConsulta.getYear(), fechaConsulta.getMonthValue());
 
-        // SANCIONES
         List<Sancion> sancionesPendientes = sancionRepositorio.findByAlumno_IdEstudAndEstado(alumno.getIdEstud(), "PENDIENTE");
         long incidenciasPendientes = sancionesPendientes.size();
 
         String estadoCuenta = (alumno.getEstadoCuenta() != null) ? alumno.getEstadoCuenta().trim().toUpperCase() : "";
         boolean estaBloqueado = incidenciasPendientes > 0 || "BLOQUEADO_POR_DEUDA".equals(estadoCuenta);
 
-        // HISTORIAL Y ESTADÍSTICAS
         List<ReservaIntegrante> participaciones = reservaIntegranteRepositorio.findByAlumno_IdEstud(alumno.getIdEstud());
         List<HistorialReservaDto> historial = new ArrayList<>();
         
@@ -575,7 +630,6 @@ public class AlumnoPortalController {
         modelo.addAttribute("mesSiguiente", String.format("%04d-%02d", mesSiguiente.getYear(), mesSiguiente.getMonthValue()));
         modelo.addAttribute("esMesActual", fechaConsulta.getMonthValue() == hoy.getMonthValue() && fechaConsulta.getYear() == hoy.getYear());
 
-                
         return "alumno/cuenta";
     }
 
@@ -598,17 +652,14 @@ public class AlumnoPortalController {
         if (opt.isPresent()) {
             Sancion s = opt.get();
             
-            // Verificar que la sanción pertenezca al alumno logueado
             if (s.getAlumno() == null || !s.getAlumno().getIdEstud().equals(alumno.getIdEstud())) {
                 redirectAttributes.addFlashAttribute("mensajeCancelacion", "No tienes permiso para pagar esta incidencia.");
                 return "redirect:/alumno/cuenta";
             }
 
-            // Cambiar estado a PAGADA
             s.setEstado("PAGADA");
             sancionRepositorio.save(s);
 
-            // Verificar si el alumno ya no tiene más deudas para desbloquearlo
             long pendientes = sancionRepositorio.countByAlumno_IdEstudAndEstadoNotIn(
                 alumno.getIdEstud(), 
                 List.of("PAGADA", "RESUELTA")
@@ -852,7 +903,6 @@ public class AlumnoPortalController {
             return "redirect:/alumno/cuenta";
         }
 
-        // ⭐ ZONA HORARIA DE PERÚ
         java.time.ZoneId zonaPeru = java.time.ZoneId.of("America/Lima");
         LocalDateTime ahoraPeru = LocalDateTime.now(zonaPeru);
 
@@ -867,27 +917,26 @@ public class AlumnoPortalController {
         reserva.setEstado("CANCELADA");
         reservaRepositorio.save(reserva);
 
-        redirectAttributes.addFlashAttribute("mensajeCancelacion", "La reserva " + idReserva + " fue cancelada correctamente.");
-        
         // ⭐ ENVIAR CORREO DE CANCELACIÓN
-try {
-    String correoDestino = alumno.getIdEstud().toLowerCase() + "@utp.edu.pe";
-    String asunto = "ESTE CORREO ES DE PRUEBA ❌ Reserva Cancelada - UTP +Lab";
-    String mensaje = "Hola " + alumno.getNombre() + ",\n\n" +
-            "Te confirmamos que tu reserva en " + reserva.getLaboratorio().getNombre() + 
-            " (" + reserva.getLaboratorio().getUbicacionCubiculo() + ") ha sido cancelada exitosamente.\n\n" +
-            "Fecha: " + reserva.getFechaReserva() + "\n" +
-            "Horario: " + reserva.getHoraInicio() + " - " + reserva.getHoraFin() + "\n" +
-            "Código de reserva: " + reserva.getIdReserva() + "\n\n" +
-            "Si no realizaste esta cancelación, por favor contacta a tu coordinador.\n\n" +
-            "Atentamente,\nEl equipo de UTP +Lab";
+        try {
+            String correoDestino = alumno.getIdEstud().toLowerCase() + "@utp.edu.pe";
+            String asunto = "❌ Reserva Cancelada - UTP +Lab";
+            String mensaje = "Hola " + alumno.getNombre() + ",\n\n" +
+                    "Te confirmamos que tu reserva en " + reserva.getLaboratorio().getNombre() + 
+                    " (" + reserva.getLaboratorio().getUbicacionCubiculo() + ") ha sido cancelada exitosamente.\n\n" +
+                    "Fecha: " + reserva.getFechaReserva() + "\n" +
+                    "Horario: " + reserva.getHoraInicio() + " - " + reserva.getHoraFin() + "\n" +
+                    "Código de reserva: " + reserva.getIdReserva() + "\n\n" +
+                    "Si no realizaste esta cancelación, por favor contacta a tu coordinador.\n\n" +
+                    "Atentamente,\nEl equipo de UTP +Lab";
 
-    emailService.enviarCorreo(correoDestino, asunto, mensaje);
-    System.out.println("✅ Correo de cancelación enviado a: " + correoDestino);
-} catch (Exception e) {
-    System.out.println("❌ Error al enviar correo de cancelación: " + e.getMessage());
-}
-        
+            emailService.enviarCorreo(correoDestino, asunto, mensaje);
+            System.out.println("✅ Correo de cancelación enviado a: " + correoDestino);
+        } catch (Exception e) {
+            System.out.println("❌ Error al enviar correo de cancelación: " + e.getMessage());
+        }
+
+        redirectAttributes.addFlashAttribute("mensajeCancelacion", "La reserva " + idReserva + " fue cancelada correctamente.");
         return "redirect:/alumno/cuenta";
     }
 

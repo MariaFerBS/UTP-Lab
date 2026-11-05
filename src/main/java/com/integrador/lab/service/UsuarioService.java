@@ -11,8 +11,10 @@ import com.integrador.lab.dto.CambioPasswordDTO;
 import com.integrador.lab.exception.CambioPasswordException;
 import com.integrador.lab.modelo.Administrador;
 import com.integrador.lab.modelo.Alumno;
+import com.integrador.lab.modelo.Encargado;
 import com.integrador.lab.repository.AdministradorRepository;
 import com.integrador.lab.repository.AlumnoRepository;
+import com.integrador.lab.repository.EncargadoRepository;
 
 @Service
 public class UsuarioService {
@@ -22,6 +24,9 @@ public class UsuarioService {
 
     @Autowired
     private AdministradorRepository administradorRepositorio;
+
+    @Autowired
+    private EncargadoRepository encargadoRepositorio;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -119,6 +124,41 @@ public class UsuarioService {
             );
         }
 
+        // --- BÚSQUEDA DE ENCARGADO ---
+        Optional<Encargado> encargadoOpcional = encargadoRepositorio.findById(entrada.toUpperCase());
+        if (encargadoOpcional.isEmpty()) {
+            encargadoOpcional = encargadoRepositorio.findByDni(entrada);
+        }
+
+        if (encargadoOpcional.isPresent()) {
+            Encargado encargado = encargadoOpcional.get();
+            String passwordDB = encargado.getPassword();
+            boolean loginValido = false;
+
+            if (clave.equals(passwordDB)) {
+                loginValido = true;
+            } else {
+                try {
+                    if (passwordEncoder.matches(clave, passwordDB)) {
+                        loginValido = true;
+                    }
+                } catch (Exception e) { }
+            }
+
+            if (!loginValido) {
+                throw new RuntimeException("Código o contraseña incorrectos.");
+            }
+
+            return new ResultadoLogin(
+                "ENCARGADO",
+                encargado.getIdEncargado(),
+                encargado.getNombre(),
+                encargado.getApellido(),
+                "HABILITADO",
+                "Encargado de Laboratorio"
+            );
+        }
+
         throw new RuntimeException("Código UTP o usuario no encontrado en el sistema.");
     }
 
@@ -206,5 +246,6 @@ public class UsuarioService {
         public String getNombreCompleto() { return nombre + " " + apellido; }
         public boolean esAdmin() { return "ADMIN".equalsIgnoreCase(rol); }
         public boolean esAlumno() { return "ALUMNO".equalsIgnoreCase(rol); }
+        public boolean esEncargado() { return "ENCARGADO".equalsIgnoreCase(rol); }
     }
 }

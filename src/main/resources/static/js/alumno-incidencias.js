@@ -1,5 +1,6 @@
 let idSancionActual = '';
-let montoActual = 'S/ 350.00';
+let montoActual = 'S/ 0.00';
+let metodoPagoActual = 'YAPE';
 
 document.addEventListener("DOMContentLoaded", function () {
   if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -8,14 +9,20 @@ document.addEventListener("DOMContentLoaded", function () {
 function abrirModalPago(btn) {
   idSancionActual = btn.getAttribute('data-id');
   const item = btn.getAttribute('data-item') || 'Material de Lab';
-  montoActual = btn.getAttribute('data-monto') || 'S/ 350.00';
+  montoActual = btn.getAttribute('data-monto') || 'S/ 0.00';
 
   document.getElementById('modalTituloInc').innerText = `Pago de Incidencia · ${item}`;
   document.getElementById('modalMontoPagar').innerText = montoActual;
   document.getElementById('labelComercioQr').innerText = `UTP Lab · ${montoActual}`;
   document.getElementById('btnConfirmarPago').innerText = `Confirmar pago · ${montoActual}`;
 
-  // Mostrar paso 1, ocultar paso 2
+  // Reset a Yape
+  metodoPagoActual = 'YAPE';
+  document.querySelectorAll('.opcion-metodo').forEach(o => o.classList.remove('seleccionado'));
+  document.querySelectorAll('.opcion-metodo')[0].classList.add('seleccionado');
+  document.getElementById('cajaDetalleMetodo').style.display = 'block';
+  document.getElementById('seccionTarjeta').style.display = 'none';
+
   document.getElementById('pasoPagoSeleccion').style.display = 'block';
   document.getElementById('pasoPagoExitoso').style.display = 'none';
   document.getElementById('modalPagoIncidencia').style.display = 'flex';
@@ -30,17 +37,29 @@ function cerrarModalPago() {
 function seleccionarMetodo(elem, metodo) {
   document.querySelectorAll('.opcion-metodo').forEach(el => el.classList.remove('seleccionado'));
   elem.classList.add('seleccionado');
+  metodoPagoActual = metodo;
 
+  const cajaQr = document.getElementById('cajaDetalleMetodo');
+  const seccionTarjeta = document.getElementById('seccionTarjeta');
   const tituloQr = document.getElementById('tituloQrMetodo');
-  if (metodo === 'yape') {
-    tituloQr.innerText = 'Pagar con Yape';
-    tituloQr.style.color = '#7c3aed';
-  } else if (metodo === 'plin') {
-    tituloQr.innerText = 'Pagar con Plin';
-    tituloQr.style.color = '#059669';
+  const imagenQr = document.getElementById('imagenQrPago');
+
+  if (metodo === 'TARJETA') {
+    cajaQr.style.display = 'none';
+    seccionTarjeta.style.display = 'block';
   } else {
-    tituloQr.innerText = 'Transferencia BCP / Interbank';
-    tituloQr.style.color = '#0284c7';
+    cajaQr.style.display = 'block';
+    seccionTarjeta.style.display = 'none';
+
+    if (metodo === 'YAPE') {
+      tituloQr.innerText = 'Pagar con Yape';
+      tituloQr.style.color = '#7c3aed';
+      imagenQr.src = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=UTP-LAB-YAPE&color=7c3aed';
+    } else {
+      tituloQr.innerText = 'Pagar con Plin';
+      tituloQr.style.color = '#059669';
+      imagenQr.src = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=UTP-LAB-PLIN&color=059669';
+    }
   }
 }
 
@@ -49,15 +68,60 @@ function ejecutarPagoBackend() {
   btn.innerText = "Procesando pago...";
   btn.disabled = true;
 
+  const params = new URLSearchParams();
+  params.append('metodoPago', metodoPagoActual);
+
+  if (metodoPagoActual === 'TARJETA') {
+    const num = document.getElementById('inputNumeroTarjeta').value.replace(/\s/g, '');
+    const titular = document.getElementById('inputTitularTarjeta').value.trim();
+    const fecha = document.getElementById('inputFechaExpTarjeta').value.trim();
+    const cvv = document.getElementById('inputCvvTarjeta').value.trim();
+
+    // Validaciones locales (rápidas)
+    if (!num || num.length < 16) {
+      alert('❌ Ingresa un número de tarjeta válido (16 dígitos).');
+      btn.innerText = `Confirmar pago · ${montoActual}`;
+      btn.disabled = false;
+      return;
+    }
+    if (!titular) {
+      alert('❌ Ingresa el nombre del titular.');
+      btn.innerText = `Confirmar pago · ${montoActual}`;
+      btn.disabled = false;
+      return;
+    }
+    if (!fecha || !cvv) {
+      alert('❌ Completa la fecha de expiración y el CVV.');
+      btn.innerText = `Confirmar pago · ${montoActual}`;
+      btn.disabled = false;
+      return;
+    }
+
+    // ⭐ Enviar TODOS los datos al backend
+    params.append('numeroTarjeta', num);
+    params.append('titularTarjeta', titular);
+    params.append('fechaExpTarjeta', fecha);
+    params.append('cvvTarjeta', cvv);
+  }
+
   fetch(`/alumno/incidencias/pagar/${idSancionActual}`, {
-    method: 'POST'
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: params
   })
-  .then(res => res.json())
-  .then(data => {
-    // Pasar a pantalla de ¡Pago Exitoso! (Figma)
+  .then(res => res.json().then(data => ({ ok: res.ok, data })))
+  .then(({ ok, data }) => {
+    if (!ok) {
+      alert('❌ ' + (data.error || 'Error al procesar el pago'));
+      btn.innerText = `Confirmar pago · ${montoActual}`;
+      btn.disabled = false;
+      return;
+    }
+
+    // Pago exitoso
     document.getElementById('pasoPagoSeleccion').style.display = 'none';
     document.getElementById('subtextoExitoMonto').innerText = `${montoActual} procesados correctamente`;
-    document.getElementById('textoTxnCode').innerText = data.transaccion || 'TXN-0560042900';
+    document.getElementById('textoTxnCode').innerText = data.transaccion || 'TXN-000';
     document.getElementById('pasoPagoExitoso').style.display = 'flex';
 
     if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -70,139 +134,6 @@ function ejecutarPagoBackend() {
 }
 
 function finalizarPagoYRecargar() {
-  // 1. Ocultar modal
   cerrarModalPago();
-
-  // 2. Ocultar banner de bloqueo rojo
-  const banner = document.getElementById('bannerBloqueoAlerta');
-  if (banner) banner.style.display = 'none';
-
-  // 3. Ocultar badges de alerta
-  const badgeHeader = document.getElementById('badgeHeaderPendientes');
-  if (badgeHeader) badgeHeader.style.display = 'none';
-  const badgeCampana = document.getElementById('badgeCampana');
-  if (badgeCampana) badgeCampana.style.display = 'none';
-  const badgeMenu = document.getElementById('badgeMenuLateral');
-  if (badgeMenu) badgeMenu.style.display = 'none';
-
-  // 4. Cambiar tarjeta a "Pagada" y "✓ Pagado y regularizado"
-  const badgeEstado = document.getElementById(`badge-estado-${idSancionActual}`);
-  if (badgeEstado) {
-    badgeEstado.className = 'badge-pagada-verde';
-    badgeEstado.innerText = 'Pagada';
-  }
-
-  const iconoBox = document.getElementById(`icono-box-${idSancionActual}`);
-  if (iconoBox) {
-    iconoBox.innerHTML = '<i data-lucide="check-square" style="color: #10b981; width: 20px; height: 20px;"></i>';
-  }
-
-  const contenedorAccion = document.getElementById(`contenedor-accion-${idSancionActual}`);
-  if (contenedorAccion) {
-    contenedorAccion.innerHTML = '<span class="texto-regularizado-verde">✓ Pagado y regularizado</span>';
-  }
-
-  if (typeof lucide !== 'undefined') lucide.createIcons();
-}
-
-function abrirModalIncidencia(fila) {
-    const idSancion = fila.getAttribute('data-id-sancion');
-    if (!idSancion) return;
-
-    document.getElementById('modalDetalleIncidencia').style.display = 'flex';
-    document.getElementById('incId').innerText = idSancion;
-
-    fetch(`/alumno/api/incidencia/${idSancion}`)
-        .then(res => res.json())
-        .then(data => {
-            if (!data.encontrado) {
-                alert('No se encontró la incidencia.');
-                cerrarModalIncidencia();
-                return;
-            }
-
-            document.getElementById('incMotivo').innerText = data.motivo;
-            document.getElementById('incReserva').innerText = data.idReserva;
-            document.getElementById('incFecha').innerText = data.fechaReserva;
-            document.getElementById('incLab').innerText = data.laboratorio;
-            document.getElementById('incCubiculo').innerText = data.cubiculo;
-            document.getElementById('incHorario').innerText = data.horario;
-            document.getElementById('incMonto').innerText = 'S/ ' + parseFloat(data.monto).toFixed(2);
-
-            // --- BADGE DE ESTADO ---
-            const badge = document.getElementById('incEstado');
-            badge.innerText = data.estado;
-            badge.className = 'badge-estado-recibo'; // Clase base
-            // Limpiamos estilos en línea previos para que la clase funcione
-            badge.style.background = '';
-            badge.style.color = '';
-            badge.style.padding = '3px 8px';
-            badge.style.borderRadius = '6px';
-            badge.style.fontSize = '0.72rem';
-            badge.style.fontWeight = '700';
-            badge.style.display = 'inline-block';
-
-            if (data.estado === 'PAGADA' || data.estado === 'RESUELTA') {
-                badge.style.background = '#dcfce7';
-                badge.style.color = '#15803d';
-            } else if (data.estado === 'NOTIFICADA') {
-                badge.style.background = '#fef3c7';
-                badge.style.color = '#d97706';
-            } else {
-                badge.style.background = '#fee2e2';
-                badge.style.color = '#dc2626';
-            }
-
-            // --- INFORMACIÓN DE PAGO ---
-            if (data.estado === 'PAGADA' || data.estado === 'RESUELTA') {
-                document.getElementById('filaMetodoPago').style.display = 'flex';
-                document.getElementById('filaFechaPago').style.display = 'flex';
-                document.getElementById('incMetodo').innerText = data.metodoPago ? data.metodoPago.replace('PAGO_', '') : 'YAPE';
-                
-                // Formatear la fecha de pago (viene como string ISO)
-                if (data.fechaPago) {
-                    const fecha = new Date(data.fechaPago);
-                    document.getElementById('incFechaPago').innerText = fecha.toLocaleDateString('es-PE', { 
-                        day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' 
-                    });
-                } else {
-                    document.getElementById('incFechaPago').innerText = '—';
-                }
-            } else {
-                document.getElementById('filaMetodoPago').style.display = 'none';
-                document.getElementById('filaFechaPago').style.display = 'none';
-            }
-
-            // --- INTEGRANTES (Diseño de tarjetas con avatar) ---
-            const contInteg = document.getElementById('incIntegrantes');
-            contInteg.innerHTML = '';
-            if (data.integrantes && data.integrantes.length > 0) {
-                data.integrantes.forEach(i => {
-                    // Generamos las iniciales
-                    const iniciales = i.nombre.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
-                    
-                    contInteg.insertAdjacentHTML('beforeend', `
-                        <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 0.85rem; background: #f8fafc; border-radius: 8px; border: 1px solid #f1f5f9;">
-                            <div style="width: 32px; height: 32px; border-radius: 50%; background: #1e1b4b; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 800; flex-shrink: 0;">
-                                ${iniciales}
-                            </div>
-                            <div style="display: flex; flex-direction: column;">
-                                <strong style="font-size: 0.85rem; color: #0f172a;">${i.nombre}</strong>
-                                <span style="font-size: 0.75rem; color: #64748b;">${i.codigo}</span>
-                            </div>
-                        </div>
-                    `);
-                });
-            } else {
-                contInteg.innerHTML = '<p style="font-size: 0.85rem; color: #64748b;">No hay integrantes registrados.</p>';
-            }
-        })
-        .catch(() => {
-            alert('Error al cargar los detalles de la incidencia.');
-            cerrarModalIncidencia();
-        });
-}
-
-function cerrarModalIncidencia() {
-    document.getElementById('modalDetalleIncidencia').style.display = 'none';
+  window.location.reload(); // Recargar para reflejar el pago grupal
 }

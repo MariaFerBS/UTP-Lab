@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- ============ FRAGMENT 1: TOPBAR ============ -->
+<header th:fragment="topbar" class="cabecera-superior">
+
+    <!-- BOTÓN HAMBURGUESA (Solo visible en móviles) -->
+    <button class="btn-hamburguesa" onclick="toggleSidebar()">
+        <i data-lucide="menu"></i>
+    </button>
+    
+    <div class="logo-cabecera">
+        <span class="insignia-utp">UTP</span>
+        <span class="texto-lab">+Lab</span>
+    </div>
+
+    <div class="perfil-acciones">
+        <div class="contenedor-campana-wrapper">
+            <button type="button" class="boton-campana-amarilla" onclick="toggleNotificaciones(event)">
+                <i data-lucide="bell"></i>
+                <span class="badge-campana" 
+                      th:if="${totalIncidencias != null and totalIncidencias > 0}" 
+                      th:text="${totalIncidencias}">2</span>
+            </button>
+
+            <div id="burbujaNotificaciones" class="burbuja-notificaciones" style="display: none;">
+                <div class="cabecera-burbuja">
+                    <strong>Notificaciones</strong>
+                    <button type="button" class="btn-cerrar-burbuja" onclick="cerrarNotificaciones()">✕</button>
+                </div>
+                
+                <div class="lista-notificaciones">
+                    <a th:href="@{/encargado/incidencias}" class="item-notificacion" 
+                       th:if="${totalIncidencias != null and totalIncidencias > 0}">
+                        <div class="icono-notif icono-notif-rojo">
+                            <i data-lucide="alert-triangle"></i>
+                        </div>
+                        <div class="info-notif">
+                            <strong>Tienes incidencias pendientes</strong>
+                            <span th:text="${totalIncidencias} + ' incidencia(s) sin resolver'">2 incidencias sin resolver</span>
+                        </div>
+                    </a>
+
+                    <div th:if="${totalIncidencias == null or totalIncidencias == 0}" 
+                         class="sin-notificaciones">
+                        <i data-lucide="check-circle"></i>
+                        <p>No tienes notificaciones pendientes</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="datos-perfil">
+            <span class="titulo-saludo" th:text="'Hola, ' + ${session.nombreUsuario}">Hola, Carlos</span>
+            <span class="subtitulo-rol">Encargado de Laboratorio</span>
+        </div>
+        <div class="circulo-avatar avatar-naranja" 
+            th:text="${session.nombreUsuario != null ? 
+                        #strings.substring(session.nombreUsuario, 0, 1) + 
+                        (session.nombreUsuario.contains(' ') ? 
+                            #strings.substring(session.nombreUsuario, session.nombreUsuario.indexOf(' ') + 1, session.nombreUsuario.indexOf(' ') + 2) 
+                            : '') 
+                        : 'EN'}">
+            EN
+        </div>
+        <a th:href="@{/logout}" class="enlace-salir">
+            <i data-lucide="log-out"></i>
+            <span>Salir</span>
+        </a>
+    </div>
+</header>
+
+<!-- ============ FRAGMENT 2: SCRIPTS ============ -->
+<th:block th:fragment="scripts">
+    <script th:src="@{/js/topbar.js}"></script>
+</th:block>
+
+</body>
+</html>

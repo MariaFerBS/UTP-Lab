@@ -2,16 +2,17 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/head :: head('Dashboard')}">
   <link rel="stylesheet" th:href="@{/css/base.css}">
-<link rel="stylesheet" th:href="@{/css/admin.css}">
-<link rel="stylesheet" th:href="@{/css/responsive.css}">
+  <link rel="stylesheet" th:href="@{/css/admin.css}">
+  <link rel="stylesheet" th:href="@{/css/responsive.css}">
 </head>
 <body>
   <div class="contenedor-app">
     
-    <!-- Actualizado a sidebar-admin -->
-<aside th:replace="~{fragments/sidebar-admin :: sidebar('dashboard')}"></aside>
+    <!-- SIDEBAR ADMIN -->
+    <aside th:replace="~{fragments/sidebar-admin :: sidebar('dashboard')}"></aside>
+    
     <main class="area-principal">
-      <!-- Actualizado a topbar-admin -->
+      <!-- TOPBAR ADMIN -->
       <header th:replace="~{fragments/topbar-admin :: topbar}"></header>
 
       <section class="seccion-checkout">
@@ -118,7 +119,7 @@
 
         </div>
 
-        <!-- CUERPO PRINCIPAL: ESTADOS DE LABORATORIOS (IZQUIERDA) Y AGENDA DE HOY (DERECHA) -->
+        <!-- CUERPO PRINCIPAL: ESTADOS DE LABORATORIOS Y AGENDA -->
         <div class="grid-principal-dash-figma">
           
           <!-- COLUMNA IZQUIERDA: ESTADOS DE LABORATORIOS -->
@@ -181,7 +182,7 @@
 
         </div>
 
-        <!-- FILA INFERIOR: INCIDENCIAS RECIENTES (IZQ) Y ALERTAS DE STOCK (DER) -->
+        <!-- FILA INFERIOR: INCIDENCIAS RECIENTES Y ALERTAS DE STOCK -->
         <div class="grid-inferior-dash-figma">
           
           <!-- INCIDENCIAS RECIENTES -->
@@ -227,8 +228,10 @@
     </main>
   </div>
 
-    <div th:replace="~{fragments/scripts}"></div>
+  <!-- SCRIPTS GLOBALES -->
+  <div th:replace="~{fragments/scripts}"></div>
   <script th:src="@{/js/admin-dashboard.js}"></script>
+  <!-- SCRIPTS DEL TOPBAR (necesario para la campanita) -->
   <div th:replace="~{fragments/topbar-admin :: scripts}"></div>
 </body>
 </html>

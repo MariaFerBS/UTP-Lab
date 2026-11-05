@@ -6,10 +6,10 @@
     <title>UTP +Lab - Laboratorios</title>
 
     <!-- CSS -->
-   <link rel="stylesheet" th:href="@{/css/base.css}" />
-<link rel="stylesheet" th:href="@{/css/alumno.css}" />
-<link rel="stylesheet" th:href="@{/css/modales.css}" />
-<link rel="stylesheet" th:href="@{/css/responsive.css}" />
+    <link rel="stylesheet" th:href="@{/css/base.css}" />
+    <link rel="stylesheet" th:href="@{/css/alumno.css}" />
+    <link rel="stylesheet" th:href="@{/css/modales.css}" />
+    <link rel="stylesheet" th:href="@{/css/responsive.css}" />
 
     <!-- Fuentes y Librerías -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -31,8 +31,6 @@
         ></header>
 
         <section class="seccion-checkout">
-         
-
           <!-- BIENVENIDA -->
           <div class="fila-bienvenida">
             <div>
@@ -96,8 +94,8 @@
               </p>
             </div>
             <a th:href="@{/alumno/incidencias}" class="btn-nueva-reserva" style="background-color: #ef4444; text-decoration: none; padding: 0.6rem 1.2rem; font-size: 0.85rem; color: white; border-radius: 8px; font-weight: 700;">
-        Pagar ahora
-    </a>
+              Pagar ahora
+            </a>
           </div>
 
           <!-- Banner informativo si la carrera no tiene laboratorios -->
@@ -285,7 +283,7 @@
         <div class="tarjeta-modal modal-horarios-ancho">
           <div class="cabecera-modal-azul">
             <div class="icono-cabecera-lab"><i data-lucide="beaker"></i></div>
-            <div  style="flex: 1; margin-left: 1rem;">
+            <div style="flex: 1; margin-left: 1rem;">
               <h3 id="tituloLabModal">Lab. Química</h3>
               <p id="subtituloLabModal">Bloque A · Sala A-101 · 12 puestos</p>
             </div>
@@ -1084,6 +1082,7 @@
           <div class="icono-tarjeta-chip">💳</div>
         </div>
 
+        <!-- Selector de método -->
         <div class="rejilla-metodos-pago">
           <div
             class="opcion-metodo-pago seleccionado"
@@ -1101,10 +1100,51 @@
           </div>
           <div
             class="opcion-metodo-pago"
-            onclick="seleccionarMetodo(this, 'TRANSFERENCIA')"
+            onclick="seleccionarMetodo(this, 'TARJETA')"
           >
-            <div class="icono-metodo">🏛️</div>
-            <span>Cuenta Interbancaria</span>
+            <div class="icono-metodo">💳</div>
+            <span>Tarjeta</span>
+          </div>
+        </div>
+
+        <!-- QR simulado para YAPE/PLIN -->
+        <div id="seccionQrPago" style="text-align:center; margin: 1rem 0;">
+          <div style="background:#f8fafc; border-radius:12px; padding:1.5rem;">
+            <p style="font-size:2.5rem; margin:0;">📱</p>
+            <p style="font-size:0.85rem; color:#64748b; margin:0.5rem 0;">
+              Escanea el QR o presiona "Confirmar y Pagar"
+            </p>
+            <p style="font-weight:700; margin:0;" id="montoQrText">S/ 0.00</p>
+          </div>
+        </div>
+
+        <!-- Formulario de tarjeta (oculto por defecto) -->
+        <div id="seccionTarjetaPago" style="display: none; margin: 1rem 0;">
+          <div style="display:flex; flex-direction:column; gap:0.75rem;">
+            <div>
+              <label style="font-size:0.8rem; font-weight:600; color:#475569;">Número de tarjeta</label>
+              <input type="text" id="inputNumeroTarjeta" name="numeroTarjeta"
+                    placeholder="4111 1111 1111 1111" maxlength="19"
+                    style="width:100%; padding:0.6rem; border:1.5px solid #e2e8f0; border-radius:8px;" />
+            </div>
+            <div>
+              <label style="font-size:0.8rem; font-weight:600; color:#475569;">Titular</label>
+              <input type="text" id="inputTitularTarjeta"
+                    placeholder="JUAN PEREZ"
+                    style="width:100%; padding:0.6rem; border:1.5px solid #e2e8f0; border-radius:8px;" />
+            </div>
+            <div style="display:flex; gap:0.75rem;">
+              <div style="flex:1;">
+                <label style="font-size:0.8rem; font-weight:600; color:#475569;">Fecha exp.</label>
+                <input type="text" id="inputFechaExpTarjeta" placeholder="MM/AA" maxlength="5"
+                      style="width:100%; padding:0.6rem; border:1.5px solid #e2e8f0; border-radius:8px;" />
+              </div>
+              <div style="flex:1;">
+                <label style="font-size:0.8rem; font-weight:600; color:#475569;">CVV</label>
+                <input type="text" id="inputCvvTarjeta" placeholder="123" maxlength="3"
+                      style="width:100%; padding:0.6rem; border:1.5px solid #e2e8f0; border-radius:8px;" />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1121,7 +1161,7 @@
     <!-- Scripts globales (lucide, etc.) -->
     <div th:replace="~{fragments/scripts}"></div>
 
-    <!-- Scripts del Topbar del Alumno (Corregido el nombre) -->
+    <!-- Scripts del Topbar del Alumno -->
     <div th:replace="~{fragments/topbar-alumno :: scriptsAlumno}"></div>
 
     <!-- JS específico de Laboratorios -->

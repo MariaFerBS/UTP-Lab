@@ -1,0 +1,226 @@
+let reservaActualId = null;
+let totalItemsVerificar = 0;
+let itemsVerificados = 0;
+
+function abrirModalCheckin(idReserva) {
+  reservaActualId = idReserva;
+  
+  const contInteg = document.getElementById('listaCheckIntegrantes');
+  const contInsum = document.getElementById('listaCheckInsumos');
+  const contEpps = document.getElementById('listaCheckEpps');
+
+  contInteg.innerHTML = '<span style="color:#94a3b8; font-size:0.85rem;">Cargando...</span>';
+  contInsum.innerHTML = '<span style="color:#94a3b8; font-size:0.85rem;">Cargando...</span>';
+  contEpps.innerHTML = '<span style="color:#94a3b8; font-size:0.85rem;">Cargando...</span>';
+
+  document.getElementById('modalCheckin').style.display = 'flex';
+
+  fetch(`/encargado/checkin/api/${idReserva}`)
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById('modalLabTitulo').innerText = data.laboratorio;
+      document.getElementById('modalLabSubtitulo').innerText = `${data.idReserva} · ${data.horario}`;
+
+      totalItemsVerificar = 0;
+      itemsVerificados = 0;
+
+      // ESTILOS FORZADOS CON !IMPORTANT
+      const estiloTarjeta = "display: flex !important; align-items: center !important; gap: 12px !important; padding: 12px 16px !important; background-color: #f8fafc !important; border: 1px solid #e2e8f0 !important; border-radius: 10px !important; margin-bottom: 8px !important; cursor: pointer !important; box-sizing: border-box !important; width: 100% !important;";
+      const estiloCheckboxFalso = "width: 18px !important; height: 18px !important; min-width: 18px !important; border: 2px solid #94a3b8 !important; border-radius: 4px !important; background: #fff !important; display: block !important; flex-shrink: 0 !important; margin: 0 !important;";
+      const estiloInfo = "display: flex !important; flex-direction: column !important; flex: 1 !important; gap: 2px !important;";
+      const estiloNombre = "font-size: 14px !important; font-weight: 600 !important; color: #0f172a !important; margin: 0 !important; padding: 0 !important; line-height: 1.2 !important;";
+      const estiloSub = "font-size: 12px !important; color: #64748b !important; margin: 0 !important; padding: 0 !important; line-height: 1.2 !important;";
+      const estiloAvatar = "width: 32px !important; height: 32px !important; min-width: 32px !important; background-color: #0f172a !important; color: #fff !important; border-radius: 50% !important; display: flex !important; align-items: center !important; justify-content: center !important; font-size: 11px !important; font-weight: 800 !important; flex-shrink: 0 !important; margin: 0 !important;";
+      const estiloEmoji = "font-size: 20px !important; flex-shrink: 0 !important; margin: 0 !important; width: 32px !important; text-align: center !important;";
+
+      // 1. Integrantes
+      contInteg.innerHTML = '';
+      data.integrantes.forEach(i => {
+        totalItemsVerificar++;
+        contInteg.insertAdjacentHTML('beforeend', `
+          <div class="tarjeta-check-item" style="${estiloTarjeta}" onclick="toggleVerificacion(this)">
+            <input type="checkbox" style="display: none !important;" class="check-oculto" />
+            <div class="caja-checkbox-cuadro" style="${estiloCheckboxFalso}"></div>
+            <div class="avatar-circulo-verif" style="${estiloAvatar}">${i.iniciales}</div>
+            <div class="info-texto-verif" style="${estiloInfo}">
+              <strong class="nombre-persona-verif" style="${estiloNombre}">${i.nombre}</strong>
+              <span class="sub-codigo-verif" style="${estiloSub}">${i.codigo}</span>
+            </div>
+            <span class="icono-check-verde" style="color: #10b981; font-weight: 900; font-size: 16px; display: none;">✓</span>
+          </div>
+        `);
+      });
+
+      // 2. Insumos
+      contInsum.innerHTML = '';
+      if (!data.insumos || data.insumos.length === 0) {
+        contInsum.innerHTML = '<span style="color:#94a3b8; font-size:0.85rem;">No se solicitaron insumos.</span>';
+      } else {
+        data.insumos.forEach(ins => {
+          totalItemsVerificar++;
+          contInsum.insertAdjacentHTML('beforeend', `
+            <div class="tarjeta-check-item" style="${estiloTarjeta}" onclick="toggleVerificacion(this)">
+              <input type="checkbox" style="display: none !important;" class="check-oculto" />
+              <div class="caja-checkbox-cuadro" style="${estiloCheckboxFalso}"></div>
+              <div class="info-texto-verif" style="${estiloInfo}">
+                <strong class="nombre-item-verif" style="${estiloNombre}">${ins.nombre}</strong>
+                <span class="sub-unidad-verif" style="${estiloSub}">${ins.unidad}</span>
+              </div>
+              <span class="icono-check-verde" style="color: #10b981; font-weight: 900; font-size: 16px; display: none;">✓</span>
+            </div>
+          `);
+        });
+      }
+
+      // 3. EPPs
+      contEpps.innerHTML = '';
+      data.epps.forEach(epp => {
+        totalItemsVerificar++;
+        contEpps.insertAdjacentHTML('beforeend', `
+          <div class="tarjeta-check-item" style="${estiloTarjeta}" onclick="toggleVerificacion(this)">
+            <input type="checkbox" style="display: none !important;" class="check-oculto" />
+            <div class="caja-checkbox-cuadro" style="${estiloCheckboxFalso}"></div>
+            <span class="emoji-epp-icon" style="${estiloEmoji}">${epp.emoji}</span>
+            <div class="info-texto-verif" style="${estiloInfo}">
+              <strong class="nombre-item-verif" style="${estiloNombre}">${epp.nombre}</strong>
+            </div>
+            <span class="icono-check-verde" style="color: #10b981; font-weight: 900; font-size: 16px; display: none;">✓</span>
+          </div>
+        `);
+      });
+
+      actualizarContador();
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    })
+    .catch(() => {
+      alert('Error al cargar los detalles.');
+      cerrarModalCheckin();
+    });
+}
+
+function cerrarModalCheckin() {
+  document.getElementById('modalCheckin').style.display = 'none';
+  reservaActualId = null;
+}
+
+function toggleVerificacion(tarjeta) {
+  const chk = tarjeta.querySelector('.check-oculto');
+  chk.checked = !chk.checked;
+  tarjeta.classList.toggle('marcado', chk.checked);
+
+  const cuadro = tarjeta.querySelector('.caja-checkbox-cuadro');
+  const icono = tarjeta.querySelector('.icono-check-verde');
+  
+  if (chk.checked) {
+    cuadro.style.backgroundColor = '#10b981';
+    cuadro.style.borderColor = '#10b981';
+    cuadro.innerHTML = '<span style="color:white; font-size:12px; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);">✓</span>';
+    icono.style.display = 'block';
+    itemsVerificados++;
+  } else {
+    cuadro.style.backgroundColor = '#fff';
+    cuadro.style.borderColor = '#94a3b8';
+    cuadro.innerHTML = '';
+    icono.style.display = 'none';
+    itemsVerificados--;
+  }
+  actualizarContador();
+}
+
+function actualizarContador() {
+  document.getElementById('txtContadorVerificados').innerText = `${itemsVerificados}/${totalItemsVerificar} verificados`;
+}
+
+// CONFIRMACIÓN ASÍNCRONA (AJAX) - ACTUALIZACIÓN EN TIEMPO REAL
+function enviarConfirmacionCheckin() {
+  if (!reservaActualId) return;
+
+  const btn = document.getElementById('btnConfirmarCheckin');
+  btn.innerText = "Procesando...";
+  btn.disabled = true;
+
+  // Guardamos el ID antes de cerrar el modal
+  const idParaActualizar = reservaActualId;
+
+  fetch(`/encargado/checkin/confirmar/${idParaActualizar}`, {
+    method: 'POST'
+  })
+  .then(res => {
+    if (!res.ok) throw new Error("Error en servidor");
+    return res.json();
+  })
+  .then(() => {
+    // 1. Cerrar el modal
+    cerrarModalCheckin();
+
+    // 2. Buscar la tarjeta en el DOM
+    const tarjeta = document.getElementById(`tarjeta-reserva-${idParaActualizar}`);
+    
+    if (tarjeta) {
+      // 3. Actualizar el Badge de estado a "EN USO"
+      const badge = tarjeta.querySelector('.badge-estado-pill');
+      if (badge) {
+        badge.className = 'badge-estado-pill'; 
+        badge.style.background = '#dcfce7'; // Verde claro
+        badge.style.color = '#15803d';      // Verde oscuro
+        badge.innerText = 'EN USO';
+      }
+
+      // 4. Cambiar el botón "Iniciar" por "Ver Resumen"
+      const botonera = tarjeta.querySelector('.accion-derecha-checkin');
+      if (botonera) {
+        botonera.innerHTML = `
+          <span class="codigo-reserva-checkin">${idParaActualizar}</span>
+          <button type="button" 
+                  class="btn-verde-iniciar" 
+                  style="background-color: #f1f5f9; color: #475569; border: 1px solid #e2e8f0;"
+                  onclick="abrirResumenCheckin('${idParaActualizar}')">
+            <i data-lucide="file-text"></i> Ver Resumen
+          </button>
+        `;
+      }
+
+      // Refrescar iconos de Lucide para el nuevo botón
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+  })
+  .catch(() => {
+    alert("Ocurrió un error al procesar el check-in.");
+  })
+  .finally(() => {
+    btn.innerText = "Confirmar check-in →";
+    btn.disabled = false;
+  });
+}
+
+function abrirResumenCheckin(idReserva) {
+    fetch(`/encargado/checkin/api/${idReserva}`)
+        .then(res => res.json())
+        .then(data => {
+            let resumenHtml = `<strong>Laboratorio:</strong> ${data.laboratorio}<br>`;
+            resumenHtml += `<strong>Horario:</strong> ${data.horario}<br><br>`;
+            
+            resumenHtml += `<strong>Integrantes:</strong><br>`;
+            data.integrantes.forEach(i => { resumenHtml += `- ${i.nombre} (${i.codigo})<br>`; });
+            
+            resumenHtml += `<br><strong>Insumos y EPPs:</strong><br>`;
+            data.insumos.forEach(i => { resumenHtml += `- ${i.nombre}<br>`; });
+            data.epps.forEach(e => { resumenHtml += `- ${e.emoji} ${e.nombre}<br>`; });
+
+            let html = `
+                <div id="modalResumenCheckin" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 99999;">
+                    <div style="background: #fff; border-radius: 16px; width: 90%; max-width: 440px; padding: 2rem; max-height: 80vh; overflow-y: auto;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                            <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800;">Resumen de Check-in</h3>
+                            <button onclick="document.getElementById('modalResumenCheckin').remove()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer;">✕</button>
+                        </div>
+                        <div style="background: #f8fafc; border-radius: 10px; padding: 1.25rem; font-size: 0.88rem; color: #334155; line-height: 1.6;">
+                            ${resumenHtml}
+                        </div>
+                        <button onclick="document.getElementById('modalResumenCheckin').remove()" style="width: 100%; background: #0f172a; color: #fff; border: none; padding: 0.75rem; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 1.5rem;">Cerrar</button>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', html);
+        });
+}

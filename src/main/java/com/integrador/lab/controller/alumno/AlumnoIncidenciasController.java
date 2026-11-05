@@ -24,6 +24,7 @@ import com.integrador.lab.modelo.Alumno;
 import com.integrador.lab.modelo.Sancion;
 import com.integrador.lab.repository.AlumnoRepository;
 import com.integrador.lab.repository.SancionRepository;
+import com.integrador.lab.service.PagoSimulacionService;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -136,39 +137,105 @@ public String verMisIncidencias(
     return "alumno/incidencias";
 }
 
+    @Autowired
+    private PagoSimulacionService pagoSimulacionService;
+
+
+    @Autowired
+    private com.integrador.lab.repository.ReservaIntegranteRepository reservaIntegranteRepositorio;
+
         // ACCIÓN: CONFIRMAR PAGO DE LA SANCIÓN POR PARTE DEL ALUMNO
     @PostMapping("/pagar/{id}")
-    @ResponseBody
-    @Transactional
-    public ResponseEntity<?> registrarPagoAlumno(@PathVariable("id") String id, HttpSession session) { // Agregamos HttpSession
-        Optional<Sancion> opt = sancionRepositorio.findById(id);
-        if (opt.isPresent()) {
-            Sancion s = opt.get();
-            s.setEstado("RESUELTA");
+@ResponseBody
+@Transactional
+public ResponseEntity<?> registrarPagoAlumno(
+        @PathVariable("id") String id,
+        @RequestParam(value = "metodoPago", defaultValue = "YAPE") String metodoPago,
+        @RequestParam(value = "numeroTarjeta", required = false) String numeroTarjeta,
+        @RequestParam(value = "titularTarjeta", required = false) String titularTarjeta,
+        @RequestParam(value = "fechaExpTarjeta", required = false) String fechaExpTarjeta,
+        @RequestParam(value = "cvvTarjeta", required = false) String cvvTarjeta,
+        HttpSession session) {
+
+    Optional<Sancion> opt = sancionRepositorio.findById(id);
+    if (opt.isEmpty()) {
+        return ResponseEntity.badRequest().body(Map.of("error", "Sanción no encontrada"));
+    }
+
+    Sancion s = opt.get();
+
+    // ⭐ SIMULAR EL PAGO CON TODOS LOS DATOS
+    PagoSimulacionService.ResultadoPago resultado =
+            pagoSimulacionService.procesarPago(
+                metodoPago, numeroTarjeta, titularTarjeta, 
+                fechaExpTarjeta, cvvTarjeta, s.getMontoDeuda());
+
+    if (!resultado.isExitoso()) {
+        return ResponseEntity.badRequest().body(Map.of(
+            "error", resultado.getMensaje()
+        ));
+    }
+        // ⭐ PAGO GRUPAL: marcar todas las sanciones de la reserva
+        com.integrador.lab.modelo.Reserva reservaDeLaSancion = s.getReserva();
+
+        if (reservaDeLaSancion != null) {
+            String idReserva = reservaDeLaSancion.getIdReserva();
+
+            List<Sancion> sancionesDeLaReserva = sancionRepositorio.findAll().stream()
+                    .filter(x -> x.getReserva() != null && x.getReserva().getIdReserva().equals(idReserva))
+                    .toList();
+
+            for (Sancion x : sancionesDeLaReserva) {
+                x.setEstado("PAGADA");
+                sancionRepositorio.save(x);
+            }
+
+            // Desbloquear a TODOS los integrantes de la reserva
+            List<com.integrador.lab.modelo.ReservaIntegrante> integrantes =
+                    reservaIntegranteRepositorio.findByReserva_IdReserva(idReserva);
+
+            for (com.integrador.lab.modelo.ReservaIntegrante ri : integrantes) {
+                Alumno al = ri.getAlumno();
+                if (al == null) continue;
+
+                long pendientes = sancionRepositorio.countByAlumno_IdEstudAndEstadoNotIn(
+                        al.getIdEstud(), List.of("RESUELTA", "PAGADA"));
+
+                if (pendientes == 0) {
+                    al.setEstadoCuenta("HABILITADO");
+                    alumnoRepositorio.save(al);
+                }
+            }
+        } else {
+            // Fallback: solo marcar esta sanción
+            s.setEstado("PAGADA");
             sancionRepositorio.save(s);
 
             Alumno al = s.getAlumno();
             if (al != null) {
                 long deudasPendientes = sancionRepositorio.countByAlumno_IdEstudAndEstadoNotIn(
-                    al.getIdEstud(), 
-                    List.of("RESUELTA")
-                );
-
+                        al.getIdEstud(), List.of("RESUELTA", "PAGADA"));
                 if (deudasPendientes == 0) {
                     al.setEstadoCuenta("HABILITADO");
                     alumnoRepositorio.save(al);
-
-                    // ⭐ NUEVO: Refrescamos la sesión del alumno para desbloquearlo al instante
-                    session.setAttribute("usuarioLogueado", al);
                 }
             }
         }
 
-        long numeroTxn = 1000000000L + (long)(Math.random() * 9000000000L);
-        return ResponseEntity.ok(Map.of(
-            "status", "ok",
-            "transaccion", "TXN-" + numeroTxn
-        ));
+        // Refrescar la sesión con el alumno actualizado
+        Alumno alumnoSesion = (Alumno) session.getAttribute("usuarioLogueado");
+        if (alumnoSesion != null) {
+            Alumno alumnoFresco = alumnoRepositorio.findById(alumnoSesion.getIdEstud()).orElse(null);
+            if (alumnoFresco != null) {
+                session.setAttribute("usuarioLogueado", alumnoFresco);
+            }
+        }
+
+         return ResponseEntity.ok(Map.of(
+        "status", "ok",
+        "transaccion", resultado.getTransaccion() != null ? resultado.getTransaccion() : "TXN-000",
+        "mensaje", resultado.getMensaje()
+    ));
     }
 
         public static class SancionAlumnoDto {
