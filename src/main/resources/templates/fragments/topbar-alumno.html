@@ -6,7 +6,7 @@
 <header th:fragment="topbarAlumno" class="cabecera-superior">
     
     <!-- BOTÓN HAMBURGUESA (Solo visible en móviles) -->
-    <button class="btn-hamburguesa" onclick="toggleSidebar()">
+    <button type="button" class="btn-hamburguesa" onclick="toggleSidebar()">
         <i data-lucide="menu"></i>
     </button>
     
@@ -73,6 +73,21 @@
 <!-- ============ FRAGMENT 2: SCRIPTS ============ -->
 <th:block th:fragment="scriptsAlumno">
     <script th:src="@{/js/topbar-alumno.js}"></script>
+    
+    <!-- FUNCIÓN HAMBURGUESA (Agregada aquí para que funcione seguro) -->
+    <script>
+        function toggleSidebar() {
+            document.body.classList.toggle('sidebar-abierto');
+            
+            let overlay = document.querySelector('.sidebar-overlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.className = 'sidebar-overlay';
+                overlay.onclick = toggleSidebar;
+                document.body.appendChild(overlay);
+            }
+        }
+    </script>
 </th:block>
 
 </body>
