@@ -128,3 +128,153 @@ html, body {
         gap: 1rem !important;
     }
 }
+
+
+/* =====================================================
+   RESPONSIVE ALUMNO - CORRECCIÓN GENERAL
+   ===================================================== */
+
+html, body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+.contenedor-app,
+.area-principal {
+    min-width: 0;
+    max-width: 100%;
+}
+
+/* TABLETS Y PANTALLAS MEDIANAS */
+@media (max-width: 1024px) {
+
+    .rejilla-laboratorios,
+    .rejilla-catalogo {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 16px !important;
+        width: 100%;
+    }
+
+    .grid-tres-estadisticas-alumno {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    .fila-bienvenida {
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .tarjeta-perfil-alumno {
+        gap: 1.25rem;
+    }
+
+    .seccion-checkout {
+        padding: 1.5rem 1rem;
+    }
+}
+
+/* CELULARES */
+@media (max-width: 600px) {
+
+    .rejilla-laboratorios,
+    .rejilla-catalogo,
+    .grid-tres-estadisticas-alumno {
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 12px !important;
+    }
+
+    .tarjeta-lab-grid {
+        width: 100%;
+        padding: 1rem;
+    }
+
+    .fila-bienvenida {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .btn-nueva-reserva {
+        width: 100%;
+    }
+
+    .barra-filtros {
+        flex-wrap: wrap;
+    }
+
+    .btn-filtro {
+        padding: 0.45rem 0.85rem;
+    }
+
+    .tarjeta-reserva-activa {
+        flex-wrap: wrap;
+        padding: 1rem;
+        gap: 0.75rem;
+    }
+
+    .codigo-reserva-gris {
+        margin-left: 0;
+    }
+
+    .tarjeta-perfil-alumno {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 1.25rem;
+    }
+
+    .nombre-completo-perfil {
+        font-size: 1.25rem;
+    }
+
+    .fila-badges-perfil {
+        flex-wrap: wrap;
+    }
+
+    .fila-historial-reserva {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .accion-historial {
+        flex-wrap: wrap;
+        width: 100%;
+    }
+
+    .fila-busqueda-catalogo {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+
+    .cabecera-historial-con-filtro {
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+
+    .modal-grafico-contenedor {
+        width: 95% !important;
+        padding: 1rem !important;
+    }
+
+    .cuerpo-modal-grafico {
+        height: 250px !important;
+    }
+
+    .seccion-checkout {
+        padding: 1rem 0.75rem;
+    }
+}
+
+/* EVITAR DESBORDAMIENTO DEL CONTENIDO */
+.tarjeta-lab-grid,
+.info-tarjeta-lab,
+.tarjeta-insumo-catalogo,
+.info-perfil-alumno {
+    min-width: 0;
+}
+
+.titulo-lab-grid,
+.ubicacion-lab-grid,
+.nombre-insumo-txt {
+    overflow-wrap: anywhere;
+}
