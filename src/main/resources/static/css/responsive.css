@@ -1,14 +1,10 @@
+/* ==========================================================================
+   RESPONSIVE GENERAL - SISTEMA UTP (VERSIÓN DEFINITIVA)
+   ========================================================================== */
 
-/* ================================================================
-   RESPONSIVE GENERAL - SISTEMA UTP
-   MENÚ HAMBURGUESA + ALUMNO + CATÁLOGO + MI CUENTA
-   ================================================================ */
-
-
-/* ================================================================
+/* --------------------------------------------------------------------------
    1. CONFIGURACIÓN GENERAL
-   ================================================================ */
-
+   -------------------------------------------------------------------------- */
 html, body {
     width: 100%;
     max-width: 100%;
@@ -33,17 +29,14 @@ html, body {
     margin-left: 0;
 }
 
-/* El padding se aplica al contenido, no a toda la estructura */
 .seccion-checkout {
     box-sizing: border-box;
     min-width: 0;
 }
 
-
-/* ================================================================
+/* --------------------------------------------------------------------------
    2. ESCRITORIO (MAYOR A 1024PX)
-   ================================================================ */
-
+   -------------------------------------------------------------------------- */
 .btn-hamburguesa {
     display: none !important;
 }
@@ -52,15 +45,12 @@ html, body {
     display: none !important;
 }
 
-
-/* ================================================================
-   3. TABLETS Y DISPOSITIVOS MEDIANOS (1024PX O MENOS)
-   ================================================================ */
-
+/* --------------------------------------------------------------------------
+   3. TABLETS (1024PX O MENOS)
+   -------------------------------------------------------------------------- */
 @media (max-width: 1024px) {
 
     /* BOTÓN HAMBURGUESA */
-
     .btn-hamburguesa {
         display: inline-flex !important;
         align-items: center;
@@ -77,11 +67,6 @@ html, body {
         min-height: 40px;
     }
 
-    .btn-hamburguesa:active {
-        background: #e2e8f0 !important;
-        transform: scale(0.95);
-    }
-
     .btn-hamburguesa i,
     .btn-hamburguesa svg {
         width: 24px !important;
@@ -91,7 +76,6 @@ html, body {
     }
 
     /* MENÚ LATERAL */
-
     .barra-lateral,
     aside.barra-lateral {
         position: fixed !important;
@@ -100,10 +84,11 @@ html, body {
         height: 100vh !important;
         width: 260px !important;
         max-width: 80vw !important;
-        z-index: 1000 !important;
+        z-index: 1300 !important;
         transform: translateX(-100%) !important;
         transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
         box-shadow: 4px 0 15px rgba(0, 0, 0, 0.2);
+        overflow-y: auto;
     }
 
     body.sidebar-abierto .barra-lateral,
@@ -112,7 +97,6 @@ html, body {
     }
 
     /* FONDO OSCURO DEL MENÚ */
-
     .sidebar-overlay {
         display: block !important;
         position: fixed;
@@ -122,7 +106,7 @@ html, body {
         height: 100vh;
         background: rgba(15, 23, 42, 0.6);
         backdrop-filter: blur(2px);
-        z-index: 999;
+        z-index: 1250 !important;
         opacity: 0;
         pointer-events: none;
         transition: opacity 0.3s ease;
@@ -134,7 +118,6 @@ html, body {
     }
 
     /* CABECERA */
-
     .logo-cabecera {
         display: flex;
     }
@@ -144,7 +127,6 @@ html, body {
     }
 
     /* CONTENIDO PRINCIPAL */
-
     .contenedor-app,
     .area-principal {
         width: 100% !important;
@@ -152,8 +134,7 @@ html, body {
         margin-left: 0 !important;
     }
 
-    /* LABORATORIOS Y CATÁLOGO */
-
+    /* LABORATORIOS Y CATÁLOGO (2 columnas en tablet) */
     .rejilla-laboratorios,
     .rejilla-catalogo {
         display: grid !important;
@@ -162,13 +143,9 @@ html, body {
         width: 100% !important;
     }
 
-    /* ESTADÍSTICAS */
-
     .grid-tres-estadisticas-alumno {
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     }
-
-    /* BIENVENIDA */
 
     .fila-bienvenida {
         flex-wrap: wrap;
@@ -180,34 +157,19 @@ html, body {
     }
 }
 
-
-/* ================================================================
+/* --------------------------------------------------------------------------
    4. CELULARES (600PX O MENOS)
-   ================================================================ */
-
+   -------------------------------------------------------------------------- */
 @media (max-width: 600px) {
 
-    /* ------------------------------------------------
-       CONTENIDO GENERAL
-       ------------------------------------------------ */
-
+    /* CONTENIDO GENERAL */
     .seccion-checkout {
         width: 100% !important;
         max-width: 100% !important;
-        min-width: 0 !important;
         padding: 1rem 0.75rem !important;
     }
 
-    .area-principal {
-        width: 100% !important;
-        min-width: 0 !important;
-    }
-
-
-    /* =================================================
-       PANEL PRINCIPAL - LABORATORIOS
-       ================================================= */
-
+    /* BIENVENIDA */
     .fila-bienvenida {
         display: flex !important;
         flex-direction: column !important;
@@ -232,74 +194,76 @@ html, body {
         justify-content: center;
     }
 
-    /* UNA COLUMNA DE LABORATORIOS */
-
+    /* LABORATORIOS A 1 COLUMNA */
     .rejilla-laboratorios {
         display: grid !important;
-        grid-template-columns: minmax(0, 1fr) !important;
+        grid-template-columns: 1fr !important;
         gap: 12px !important;
         width: 100% !important;
     }
 
     .tarjeta-lab-grid {
         display: flex !important;
-        align-items: center !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
         width: 100% !important;
-        min-width: 0 !important;
-        min-height: 90px;
-        padding: 14px !important;
-        gap: 12px !important;
+        padding: 1rem !important;
+        gap: 0.75rem !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
     }
 
     .info-tarjeta-lab {
-        flex: 1;
+        width: 100% !important;
         min-width: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
     }
 
     .titulo-lab-grid {
-        font-size: 0.95rem !important;
+        font-size: 1rem !important;
+        font-weight: 700 !important;
+        line-height: 1.3 !important;
         white-space: normal !important;
-        overflow-wrap: anywhere;
+        word-break: break-word !important;
+        overflow-wrap: anywhere !important;
+        width: 100% !important;
+        margin-bottom: 0.25rem !important;
     }
 
     .ubicacion-lab-grid {
-        font-size: 0.8rem !important;
+        font-size: 0.85rem !important;
         white-space: normal !important;
-        overflow-wrap: anywhere;
+        word-break: break-word !important;
+        overflow-wrap: anywhere !important;
+        width: 100% !important;
+        margin-bottom: 0.5rem !important;
     }
 
-    /* FILTROS */
-
-    .barra-filtros {
-        display: flex !important;
-        flex-wrap: wrap !important;
-        gap: 8px !important;
-        width: 100%;
+    .icono-cuadro-lab {
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        margin-bottom: 0.5rem !important;
+        border-radius: 10px !important;
     }
 
-    .btn-filtro {
-        padding: 0.5rem 0.85rem !important;
-        font-size: 0.8rem !important;
+    .puestos-tag {
+        display: inline-block !important;
+        margin-top: 0 !important;
     }
 
-
-    /* =================================================
-       CATÁLOGO DE INSUMOS
-       ================================================= */
-
+    /* CATÁLOGO A 1 COLUMNA */
     .rejilla-catalogo {
         display: grid !important;
-        grid-template-columns: minmax(0, 1fr) !important;
+        grid-template-columns: 1fr !important;
         gap: 12px !important;
         width: 100% !important;
     }
-
-    /* TARJETAS HORIZONTALES */
 
     .tarjeta-insumo-catalogo {
         display: grid !important;
         grid-template-columns: 105px minmax(0, 1fr) !important;
-        flex-direction: unset !important;
         width: 100% !important;
         min-width: 0 !important;
         min-height: 145px;
@@ -345,13 +309,11 @@ html, body {
     }
 
     /* BUSCADOR */
-
     .fila-busqueda-catalogo {
         display: flex !important;
         flex-direction: column !important;
         align-items: stretch !important;
         gap: 10px !important;
-        width: 100%;
     }
 
     .caja-input-busqueda {
@@ -364,18 +326,13 @@ html, body {
         gap: 8px !important;
     }
 
-
-    /* =================================================
-       MI CUENTA - PERFIL DEL ALUMNO
-       ================================================= */
-
+    /* MI CUENTA - PERFIL */
     .tarjeta-perfil-alumno {
         display: flex !important;
         flex-direction: row !important;
         align-items: center !important;
         gap: 12px !important;
         width: 100% !important;
-        min-width: 0 !important;
         padding: 14px !important;
     }
 
@@ -402,28 +359,15 @@ html, body {
         font-size: 0.85rem !important;
     }
 
-    .fila-badges-perfil {
-        display: flex !important;
-        flex-wrap: wrap !important;
-        gap: 5px !important;
-    }
-
-
-    /* =================================================
-       ESTADÍSTICAS DE MI CUENTA
-       ================================================= */
-
+    /* ESTADÍSTICAS */
     .grid-tres-estadisticas-alumno {
         display: grid !important;
         grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
         gap: 8px !important;
-        width: 100% !important;
     }
 
     .card-estadistica-alumno {
-        min-width: 0 !important;
         padding: 14px 5px !important;
-        overflow-wrap: anywhere;
     }
 
     .num-estadistica {
@@ -439,11 +383,7 @@ html, body {
         font-size: 0.7rem !important;
     }
 
-
-    /* =================================================
-       HISTORIAL DE RESERVAS
-       ================================================= */
-
+    /* HISTORIAL */
     .cabecera-historial-con-filtro {
         display: flex !important;
         flex-direction: column !important;
@@ -472,28 +412,7 @@ html, body {
         gap: 10px;
     }
 
-    .codigo-historial {
-        overflow-wrap: anywhere;
-    }
-
-    /* RESERVAS ACTIVAS */
-
-    .tarjeta-reserva-activa {
-        display: flex !important;
-        flex-wrap: wrap !important;
-        padding: 14px !important;
-        gap: 10px !important;
-    }
-
-    .codigo-reserva-gris {
-        margin-left: 0 !important;
-    }
-
-
-    /* =================================================
-       MODALES
-       ================================================= */
-
+    /* MODALES */
     .modal-grafico-contenedor {
         width: 94% !important;
         max-width: 94% !important;
@@ -504,20 +423,26 @@ html, body {
         height: 240px !important;
     }
 
+    /* FILTROS */
+    .barra-filtros {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+    }
+
+    .btn-filtro {
+        padding: 0.5rem 0.85rem !important;
+        font-size: 0.8rem !important;
+    }
 }
 
-
-/* ================================================================
+/* --------------------------------------------------------------------------
    5. CELULARES MUY PEQUEÑOS (360PX O MENOS)
-   ================================================================ */
-
+   -------------------------------------------------------------------------- */
 @media (max-width: 360px) {
-
     .seccion-checkout {
         padding: 0.75rem !important;
     }
-
-    /* PERFIL */
 
     .avatar-grande-alumno {
         width: 55px !important;
@@ -530,8 +455,6 @@ html, body {
         font-size: 1rem !important;
     }
 
-    /* CATÁLOGO */
-
     .tarjeta-insumo-catalogo {
         grid-template-columns: 85px minmax(0, 1fr) !important;
     }
@@ -540,8 +463,6 @@ html, body {
         width: 85px !important;
     }
 
-    /* ESTADÍSTICAS */
-
     .card-estadistica-alumno {
         padding: 12px 3px !important;
     }
@@ -549,607 +470,4 @@ html, body {
     .num-estadistica {
         font-size: 1.5rem !important;
     }
-
 }
-
-
-/* ================================================================
-   6. PROTECCIÓN CONTRA DESBORDAMIENTOS
-   ================================================================ */
-
-.rejilla-laboratorios,
-.rejilla-catalogo,
-.grid-tres-estadisticas-alumno,
-.tarjeta-lab-grid,
-.tarjeta-insumo-catalogo,
-.info-tarjeta-lab,
-.info-perfil-alumno {
-    min-width: 0;
-}
-
-.titulo-lab-grid,
-.ubicacion-lab-grid,
-.nombre-insumo-txt {
-    overflow-wrap: anywhere;
-}
-
-
-/* ================================================================
-   RESPONSIVE ADMINISTRADOR UTP
-   DASHBOARD + INVENTARIO + INCIDENCIAS + CHECK-IN
-   ================================================================ */
-
-/* Evitar desbordamientos */
-.area-principal,
-.contenedor-app,
-.seccion-checkout {
-    min-width: 0;
-    max-width: 100%;
-}
-
-/* TABLETS */
-@media (max-width: 1024px) {
-
-    .grid-cuatro-metricas-figma {
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-        gap: 14px !important;
-    }
-
-    .grid-principal-dash-figma,
-    .grid-inferior-dash-figma {
-        grid-template-columns: minmax(0, 1fr) !important;
-        gap: 16px !important;
-    }
-
-    .grid-tres-estados-incidencias {
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    }
-
-    .metadatos-grid-inc {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        padding-left: 0;
-    }
-
-    .seccion-checkout {
-        padding: 1.5rem 1rem !important;
-    }
-}
-
-/* CELULARES */
-@media (max-width: 600px) {
-
-    /* CONTENIDO GENERAL */
-
-    .seccion-checkout {
-        padding: 1rem 0.75rem !important;
-        width: 100% !important;
-    }
-
-    /* DASHBOARD */
-
-    .fila-dashboard-header {
-        flex-direction: column !important;
-        align-items: flex-start !important;
-        gap: 12px !important;
-    }
-
-    .acciones-header-dashboard {
-        flex-wrap: wrap;
-        width: 100%;
-    }
-
-    .selector-fecha-dashboard {
-        max-width: 100%;
-        flex-wrap: wrap;
-    }
-
-    .grid-cuatro-metricas-figma {
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-        gap: 10px !important;
-    }
-
-    .card-metrica-figma {
-        padding: 1rem !important;
-        min-width: 0;
-    }
-
-    .num-grande-metrica {
-        font-size: 1.8rem !important;
-    }
-
-    .label-titulo-metrica {
-        font-size: 0.82rem !important;
-    }
-
-    .grid-principal-dash-figma,
-    .grid-inferior-dash-figma {
-        grid-template-columns: minmax(0, 1fr) !important;
-        gap: 12px !important;
-    }
-
-    .card-panel-blanco {
-        padding: 1rem !important;
-        min-width: 0;
-    }
-
-    .cabecera-panel-flex {
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-
-    .leyenda-dots-estados {
-        flex-wrap: wrap;
-        gap: 8px;
-    }
-
-    .grilla-cubiculos-labs {
-        grid-template-columns: minmax(0, 1fr) !important;
-    }
-
-    .fila-agenda-item {
-        flex-wrap: wrap;
-    }
-
-    .horario-agenda-txt {
-        width: auto;
-    }
-
-    /* INVENTARIO */
-
-    .acciones-header-inventario {
-        flex-direction: column !important;
-        width: 100%;
-        gap: 10px !important;
-    }
-
-    .btn-pdf-inventario,
-    .btn-nuevo-insumo-admin {
-        width: 100%;
-        justify-content: center;
-    }
-
-    .barra-busqueda-inventario-figma {
-        flex-direction: column !important;
-        align-items: stretch !important;
-        gap: 12px !important;
-    }
-
-    .caja-input-busqueda-figma {
-        width: 100% !important;
-        min-width: 0 !important;
-        flex: none !important;
-    }
-
-    .contadores-inventario {
-        flex-wrap: wrap;
-        gap: 8px !important;
-    }
-
-    .barra-filtros-inventario-figma {
-        flex-wrap: wrap !important;
-        gap: 8px !important;
-    }
-
-    .btn-filtro-inv {
-        padding: 0.45rem 0.85rem !important;
-        font-size: 0.78rem !important;
-    }
-
-    /* TABLA: SCROLL INTERNO */
-
-    .tabla-card-inventario {
-        width: 100% !important;
-        max-width: 100% !important;
-        min-width: 0 !important;
-        padding: 0.75rem !important;
-        overflow-x: auto !important;
-        -webkit-overflow-scrolling: touch;
-    }
-
-    .tabla-admin-inventario {
-        min-width: 850px !important;
-        width: max-content !important;
-        font-size: 0.8rem !important;
-    }
-
-    .tabla-admin-inventario th,
-    .tabla-admin-inventario td {
-        white-space: nowrap;
-        padding: 0.85rem 0.65rem !important;
-    }
-
-    /* INCIDENCIAS */
-
-    .grid-tres-estados-incidencias {
-        grid-template-columns: minmax(0, 1fr) !important;
-        gap: 10px !important;
-    }
-
-    .card-resumen-inc {
-        padding: 1rem !important;
-    }
-
-    .tarjeta-incidencia-completa {
-        padding: 1rem !important;
-    }
-
-    .cuerpo-superior-inc {
-        flex-wrap: wrap;
-    }
-
-    .fila-titulo-tag {
-        flex-wrap: wrap;
-    }
-
-    .accion-derecha-inc {
-        width: 100%;
-        flex-wrap: wrap;
-        justify-content: flex-start;
-    }
-
-    .metadatos-grid-inc {
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-        padding-left: 0 !important;
-        gap: 12px;
-    }
-
-    .fila-footer-notif {
-        padding-left: 0 !important;
-    }
-
-    /* CHECK-IN E INSPECCIÓN */
-
-    .tarjeta-reserva-checkin-fila {
-        flex-wrap: wrap !important;
-        padding: 1rem !important;
-        gap: 12px !important;
-    }
-
-    .info-central-checkin {
-        min-width: 0;
-    }
-
-    .fila-nombre-estado {
-        flex-wrap: wrap;
-    }
-
-    .accion-derecha-checkin {
-        width: 100%;
-        align-items: stretch !important;
-    }
-
-    .accion-derecha-checkin button {
-        width: 100%;
-        justify-content: center;
-    }
-
-    .lista-tarjetas-checkin {
-        width: 100%;
-    }
-
-    /* MODALES */
-
-    .tarjeta-modal,
-    .modal-inventario-contenedor,
-    .modal-resultado-card,
-    .tarjeta-modal-inc {
-        width: 94% !important;
-        max-width: 94% !important;
-        max-height: 90vh;
-        overflow-y: auto;
-        padding: 1.25rem !important;
-    }
-
-    .cuerpo-modal-formulario {
-        padding: 1rem !important;
-    }
-
-    .pie-modal-formulario {
-        flex-wrap: wrap;
-        padding: 1rem !important;
-    }
-}
-
-/* CELULARES PEQUEÑOS */
-
-@media (max-width: 360px) {
-
-    .grid-cuatro-metricas-figma {
-        grid-template-columns: minmax(0, 1fr) !important;
-    }
-
-    .metadatos-grid-inc {
-        grid-template-columns: minmax(0, 1fr) !important;
-    }
-
-    .card-metrica-figma {
-        padding: 1rem !important;
-    }
-}
-
-
-/* ==========================================================
-   ADMINISTRADOR - PANEL DE NOTIFICACIONES
-   ========================================================== */
-
-.cabecera-superior {
-    position: relative;
-    z-index: 1100;
-    overflow: visible !important;
-}
-
-.contenedor-campana-wrapper {
-    position: relative !important;
-    display: inline-flex !important;
-    align-items: center;
-    flex-shrink: 0;
-}
-
-.boton-campana-amarilla {
-    flex-shrink: 0;
-    cursor: pointer;
-}
-
-/* Panel flotante */
-.burbuja-notificaciones {
-    position: absolute !important;
-    top: calc(100% + 12px) !important;
-    right: 0 !important;
-    left: auto !important;
-
-    width: 340px;
-    max-width: calc(100vw - 24px);
-
-    background: #ffffff !important;
-    border: 1px solid #e2e8f0;
-    border-radius: 14px;
-    box-shadow: 0 12px 35px rgba(15, 23, 42, 0.18);
-
-    z-index: 1200 !important;
-    overflow: hidden;
-}
-
-/* Cabecera del panel */
-.cabecera-burbuja {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px;
-    border-bottom: 1px solid #e2e8f0;
-    background: #ffffff;
-    color: #1e293b;
-}
-
-.cabecera-burbuja strong {
-    font-size: 0.95rem;
-    font-weight: 700;
-}
-
-.btn-cerrar-burbuja {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 30px;
-    height: 30px;
-    border: none;
-    border-radius: 7px;
-    background: #f1f5f9;
-    color: #475569;
-    cursor: pointer;
-}
-
-/* Lista */
-.lista-notificaciones {
-    max-height: 320px;
-    overflow-y: auto;
-    background: #ffffff;
-}
-
-.item-notificacion {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 16px;
-    text-decoration: none;
-    color: #1e293b;
-    border-bottom: 1px solid #f1f5f9;
-    transition: background 0.2s;
-}
-
-.item-notificacion:hover {
-    background: #f8fafc;
-}
-
-.icono-notif {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 38px;
-    height: 38px;
-    min-width: 38px;
-    border-radius: 10px;
-}
-
-.icono-notif-rojo {
-    background: #fee2e2;
-    color: #dc2626;
-}
-
-.info-notif {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    min-width: 0;
-}
-
-.info-notif strong {
-    font-size: 0.85rem;
-    line-height: 1.4;
-}
-
-.info-notif span {
-    color: #64748b;
-    font-size: 0.78rem;
-    line-height: 1.4;
-}
-
-/* Sin notificaciones */
-.sin-notificaciones {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    padding: 28px 16px;
-    text-align: center;
-    color: #64748b;
-}
-
-.sin-notificaciones svg {
-    width: 32px;
-    height: 32px;
-    color: #10b981;
-}
-
-.sin-notificaciones p {
-    margin: 0;
-    font-size: 0.85rem;
-}
-
-/* ==========================================================
-   NOTIFICACIONES EN CELULARES
-   ========================================================== */
-
-@media (max-width: 600px) {
-
-    .cabecera-superior {
-        position: relative;
-        z-index: 1100;
-        padding: 0 0.75rem !important;
-    }
-
-    .perfil-acciones {
-        display: flex;
-        align-items: center;
-        gap: 0.65rem !important;
-        margin-left: auto;
-    }
-
-    .burbuja-notificaciones {
-        position: fixed !important;
-        top: 70px !important;
-        right: 12px !important;
-        left: auto !important;
-
-        width: 340px !important;
-        max-width: calc(100vw - 24px) !important;
-
-        max-height: calc(100vh - 90px);
-        border-radius: 14px;
-    }
-
-    .lista-notificaciones {
-        max-height: calc(100vh - 170px);
-    }
-}
-
-
-
-/* ==========================================================
-   ADMINISTRADOR - MENÚ LATERAL EN MÓVILES
-   ========================================================== */
-
-@media (max-width: 1024px) {
-
-    /* El menú debe quedar por encima del overlay */
-    .barra-lateral,
-    aside.barra-lateral {
-        z-index: 1300 !important;
-    }
-
-    /* Overlay detrás del menú */
-    .sidebar-overlay {
-        z-index: 1250 !important;
-    }
-
-    /* El botón no debe tapar el logo del menú */
-    .btn-hamburguesa {
-        position: relative;
-        z-index: 1200 !important;
-    }
-
-    /* Cuando el menú está abierto, ocultar el botón
-       que queda detrás del menú */
-    body.sidebar-abierto .btn-hamburguesa {
-        visibility: hidden;
-    }
-
-    .barra-lateral {
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-
-    .logo-lateral {
-        position: relative;
-        z-index: 1;
-        padding-top: 1rem;
-    }
-}
-
-/* ==========================================================================
-   CORRECCIÓN PARA TARJETAS DE LABORATORIO EN MÓVIL
-   ========================================================================== */
-
-@media (max-width: 600px) {
-    
-    /* 1. La tarjeta del laboratorio debe apilarse verticalmente */
-    .tarjeta-lab-grid {
-        display: flex !important;
-        flex-direction: column !important; /* Icono arriba, texto abajo */
-        align-items: flex-start !important;
-        padding: 1rem !important;
-        gap: 0.75rem !important;
-        width: 100% !important;
-        box-sizing: border-box !important;
-    }
-
-    /* 2. El contenedor del texto debe ocupar el 100% y permitir el salto de línea */
-    .info-tarjeta-lab {
-        width: 100% !important;
-        min-width: 0 !important; /* Permite que el flex se encoja */
-        display: flex;
-        flex-direction: column;
-    }
-
-    /* 3. Forzar que los títulos largos se rompan en varias líneas */
-    .titulo-lab-grid {
-        font-size: 1rem !important;
-        line-height: 1.3 !important;
-        white-space: normal !important; /* Permite saltos de línea */
-        overflow-wrap: break-word !important; /* Rompe palabras largas si es necesario */
-        word-wrap: break-word !important;
-    }
-
-    /* 4. Lo mismo para la ubicación */
-    .ubicacion-lab-grid {
-        font-size: 0.85rem !important;
-        white-space: normal !important;
-        overflow-wrap: break-word !important;
-    }
-
-    /* 5. El icono del laboratorio se queda arriba, pequeño y centrado */
-    .icono-cuadro-lab {
-        width: 40px !important;
-        height: 40px !important;
-        margin-bottom: 0.25rem;
-    }
-
-    /* 6. El tag de puestos no debe desbordarse */
-    .puestos-tag {
-        white-space: nowrap !important;
-        width: fit-content !important;
-        max-width: 100%;
-    }
-}
-
-
