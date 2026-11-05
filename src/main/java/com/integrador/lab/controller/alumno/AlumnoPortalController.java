@@ -421,7 +421,7 @@ public class AlumnoPortalController {
         // ⭐ ENVIAR CORREO DE CONFIRMACIÓN
         try {
             String correoDestino = alumnoLogueado.getIdEstud().toLowerCase() + "@utp.edu.pe";
-            String asunto = "✅ Confirmación de Reserva - UTP +Lab";
+            String asunto = "ESTE CORREO ES DE PRUEBA ✅ Confirmación de Reserva - UTP +Lab";
             String mensaje = "Hola " + alumnoLogueado.getNombre() + ",\n\n" +
                     "Tu reserva en " + lab.getNombre() + " (" + lab.getUbicacionCubiculo() + ") ha sido confirmada.\n" +
                     "Fecha: " + fecha + "\n" +
@@ -868,6 +868,26 @@ public class AlumnoPortalController {
         reservaRepositorio.save(reserva);
 
         redirectAttributes.addFlashAttribute("mensajeCancelacion", "La reserva " + idReserva + " fue cancelada correctamente.");
+        
+        // ⭐ ENVIAR CORREO DE CANCELACIÓN
+try {
+    String correoDestino = alumno.getIdEstud().toLowerCase() + "@utp.edu.pe";
+    String asunto = "ESTE CORREO ES DE PRUEBA ❌ Reserva Cancelada - UTP +Lab";
+    String mensaje = "Hola " + alumno.getNombre() + ",\n\n" +
+            "Te confirmamos que tu reserva en " + reserva.getLaboratorio().getNombre() + 
+            " (" + reserva.getLaboratorio().getUbicacionCubiculo() + ") ha sido cancelada exitosamente.\n\n" +
+            "Fecha: " + reserva.getFechaReserva() + "\n" +
+            "Horario: " + reserva.getHoraInicio() + " - " + reserva.getHoraFin() + "\n" +
+            "Código de reserva: " + reserva.getIdReserva() + "\n\n" +
+            "Si no realizaste esta cancelación, por favor contacta a tu coordinador.\n\n" +
+            "Atentamente,\nEl equipo de UTP +Lab";
+
+    emailService.enviarCorreo(correoDestino, asunto, mensaje);
+    System.out.println("✅ Correo de cancelación enviado a: " + correoDestino);
+} catch (Exception e) {
+    System.out.println("❌ Error al enviar correo de cancelación: " + e.getMessage());
+}
+        
         return "redirect:/alumno/cuenta";
     }
 
