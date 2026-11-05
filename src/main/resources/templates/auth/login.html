@@ -139,7 +139,7 @@
         </div>
       </section>
     </div>
-    <div th:replace="~{fragments/scripts :: scripts}"></div>
+    <th:block th:replace="~{fragments/scripts :: scripts}"></th:block>
     <!-- JS específico de Autenticación -->
     <script th:src="@{/js/auth.js}"></script>
   </body>
