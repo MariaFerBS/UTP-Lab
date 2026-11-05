@@ -1,93 +1,112 @@
+
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
 
-<!-- ============ FRAGMENT 1: TOPBAR ALUMNO ============ -->
+<!-- TOPBAR DEL ALUMNO -->
 <header th:fragment="topbarAlumno" class="cabecera-superior">
-    
-    <!-- BOTÓN HAMBURGUESA (Solo visible en móviles) -->
-    <button type="button" class="btn-hamburguesa" onclick="toggleSidebar()">
+
+    <!-- BOTÓN HAMBURGUESA -->
+    <button
+        type="button"
+        class="btn-hamburguesa"
+        onclick="toggleSidebar()"
+        aria-label="Abrir menú"
+    >
         <i data-lucide="menu"></i>
     </button>
-    
+
+    <!-- LOGO -->
     <div class="logo-cabecera">
         <span class="insignia-utp">UTP</span>
         <span class="texto-lab">+Lab</span>
     </div>
 
+    <!-- ACCIONES DEL PERFIL -->
     <div class="perfil-acciones">
-        
-        <!-- Campanita con burbuja -->
+
+        <!-- CAMPANITA -->
         <div class="contenedor-campana-wrapper">
-            <button type="button" class="boton-campana-amarilla" onclick="toggleNotificaciones(event)">
+
+            <button
+                type="button"
+                class="boton-campana-amarilla"
+                onclick="toggleNotificaciones(event)"
+                aria-label="Ver notificaciones"
+                aria-expanded="false"
+            >
                 <i data-lucide="bell"></i>
-                <span class="badge-campana" 
-                      th:if="${numIncidencias != null and numIncidencias > 0}" 
-                      th:text="${numIncidencias}">1</span>
+
+                <span
+                    class="badge-campana"
+                    th:if="${numIncidencias != null and numIncidencias > 0}"
+                    th:text="${numIncidencias}"
+                >1</span>
             </button>
 
-            <div id="burbujaNotificaciones" class="burbuja-notificaciones" style="display: none;">
+            <!-- PANEL DE NOTIFICACIONES -->
+            <div
+                id="burbujaNotificaciones"
+                class="burbuja-notificaciones"
+                hidden
+            >
+
                 <div class="cabecera-burbuja">
                     <strong>Notificaciones</strong>
-                    <button type="button" class="btn-cerrar-burbuja" onclick="cerrarNotificaciones()">✕</button>
-                </div>
-                
-                <div class="lista-notificaciones">
-                    <a th:href="@{/alumno/incidencias}" class="item-notificacion" 
-                       th:if="${numIncidencias != null and numIncidencias > 0}">
-                        <div class="icono-notif icono-notif-rojo">
-                            <i data-lucide="alert-triangle"></i>
-                        </div>
-                        <div class="info-notif">
-                            <strong>Tienes incidencias pendientes</strong>
-                            <span th:text="${numIncidencias} + ' incidencia(s) sin resolver'">1 incidencia</span>
-                        </div>
-                    </a>
 
-                    <div th:if="${numIncidencias == null or numIncidencias == 0}" 
-                         class="sin-notificaciones">
-                        <i data-lucide="check-circle"></i>
-                        <p>No tienes notificaciones pendientes</p>
-                    </div>
-                    <div class="sin-notificaciones">
-                        <i data-lucide="check-circle"></i>
-                        <p>Cargando...</p>
+                    <button
+                        type="button"
+                        class="btn-cerrar-burbuja"
+                        onclick="cerrarNotificaciones()"
+                        aria-label="Cerrar notificaciones"
+                    >
+                        ✕
+                    </button>
+                </div>
+
+                <!-- AQUÍ SE CARGAN LAS NOTIFICACIONES -->
+                <div
+                    id="listaNotificaciones"
+                    class="lista-notificaciones"
+                >
+                    <div class="estado-notificaciones">
+                        <span class="spinner-notificaciones"></span>
+                        <p>Cargando notificaciones...</p>
                     </div>
                 </div>
+
             </div>
         </div>
 
+        <!-- DATOS DEL ALUMNO -->
         <div class="datos-perfil">
-            <span class="titulo-saludo" th:text="'Hola, ' + ${alumno.nombre}">Hola, Mariafernanda</span>
+            <span
+                class="titulo-saludo"
+                th:text="'Hola, ' + ${alumno.nombre}"
+            >Hola, estudiante</span>
+
             <span class="subtitulo-rol">Estudiante</span>
         </div>
-        <div class="circulo-avatar avatar-azul" 
-     th:text="${#strings.isEmpty(alumno.nombre) ? '?' : #strings.substring(alumno.nombre,0,1)} + ${#strings.isEmpty(alumno.apellido) ? '' : #strings.substring(alumno.apellido,0,1)}">MB</div>
+
+        <!-- AVATAR -->
+        <div
+            class="circulo-avatar avatar-azul"
+            th:text="${#strings.isEmpty(alumno.nombre) ? '?' : #strings.substring(alumno.nombre,0,1)} + ${#strings.isEmpty(alumno.apellido) ? '' : #strings.substring(alumno.apellido,0,1)}"
+        >MB</div>
+
+        <!-- SALIR -->
         <a th:href="@{/logout}" class="enlace-salir">
             <i data-lucide="log-out"></i>
             <span>Salir</span>
         </a>
+
     </div>
 </header>
 
-<!-- ============ FRAGMENT 2: SCRIPTS ============ -->
+
+<!-- SCRIPTS DEL TOPBAR -->
 <th:block th:fragment="scriptsAlumno">
     <script th:src="@{/js/topbar-alumno.js}"></script>
-    
-    <!-- FUNCIÓN HAMBURGUESA (Agregada aquí para que funcione seguro) -->
-    <script>
-        function toggleSidebar() {
-            document.body.classList.toggle('sidebar-abierto');
-            
-            let overlay = document.querySelector('.sidebar-overlay');
-            if (!overlay) {
-                overlay = document.createElement('div');
-                overlay.className = 'sidebar-overlay';
-                overlay.onclick = toggleSidebar;
-                document.body.appendChild(overlay);
-            }
-        }
-    </script>
 </th:block>
 
 </body>

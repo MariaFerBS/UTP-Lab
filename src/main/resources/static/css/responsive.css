@@ -471,3 +471,539 @@ html, body {
         font-size: 1.5rem !important;
     }
 }
+
+/* CORRECCIÓN DE LABORATORIOS EN CELULARES */
+@media screen and (max-width: 600px) {
+
+    .rejilla-laboratorios {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        width: 100% !important;
+        gap: 12px !important;
+    }
+
+    .tarjeta-lab-grid {
+        width: 100% !important;
+        min-width: 0 !important;
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 12px !important;
+        overflow: hidden !important;
+    }
+
+    .info-tarjeta-lab {
+        flex: 1 !important;
+        min-width: 0 !important;
+        width: auto !important;
+    }
+
+    .titulo-lab-grid,
+    .ubicacion-lab-grid {
+        max-width: 100% !important;
+        white-space: normal !important;
+        overflow-wrap: break-word !important;
+        word-break: normal !important;
+    }
+
+    .icono-cuadro-lab {
+        flex-shrink: 0 !important;
+    }
+}
+
+
+/* ==========================================================
+   TOPBAR DEL ALUMNO - NOTIFICACIONES
+   ========================================================== */
+
+/* Evitar que el panel ocupe espacio en el contenido */
+.cabecera-superior {
+    position: relative !important;
+    z-index: 2000 !important;
+    overflow: visible !important;
+}
+
+.perfil-acciones {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.contenedor-campana-wrapper {
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    flex-shrink: 0 !important;
+}
+
+/* Botón de campana */
+.boton-campana-amarilla {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    background: #fff7d6;
+    color: #b77900;
+    transition: background 0.2s ease;
+}
+
+.boton-campana-amarilla:hover {
+    background: #ffedaa;
+}
+
+.boton-campana-amarilla svg {
+    width: 22px;
+    height: 22px;
+}
+
+/* Número de notificaciones */
+.badge-campana {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    min-width: 19px;
+    height: 19px;
+    padding: 0 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50px;
+    background: #ef4444;
+    color: white;
+    font-size: 11px;
+    font-weight: 800;
+    border: 2px solid white;
+}
+
+/* PANEL */
+.burbuja-notificaciones {
+    position: absolute !important;
+    top: calc(100% + 12px) !important;
+    right: 0 !important;
+    left: auto !important;
+
+    width: 340px;
+    max-width: calc(100vw - 24px);
+
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+
+    box-shadow: 0 12px 35px rgba(15, 23, 42, 0.18);
+
+    z-index: 3000 !important;
+    overflow: hidden;
+
+    animation: aparecerNotificaciones 0.2s ease;
+}
+
+/* Ocultar completamente el panel */
+.burbuja-notificaciones[hidden] {
+    display: none !important;
+}
+
+@keyframes aparecerNotificaciones {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* CABECERA DEL PANEL */
+.cabecera-burbuja {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 16px;
+
+    background: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.cabecera-burbuja strong {
+    font-size: 15px;
+    font-weight: 800;
+    color: #1e293b;
+}
+
+.btn-cerrar-burbuja {
+    width: 30px;
+    height: 30px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+    border-radius: 8px;
+
+    background: #f1f5f9;
+    color: #64748b;
+
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.btn-cerrar-burbuja:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+}
+
+/* LISTA */
+.lista-notificaciones {
+    width: 100%;
+    max-height: 330px;
+    overflow-y: auto;
+    background: white;
+}
+
+/* CADA NOTIFICACIÓN */
+.item-notificacion {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    width: 100%;
+    padding: 15px;
+
+    color: #1e293b;
+    text-decoration: none;
+
+    border-bottom: 1px solid #f1f5f9;
+    transition: background 0.2s ease;
+}
+
+.item-notificacion:hover {
+    background: #f8fafc;
+}
+
+.icono-notif {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 12px;
+}
+
+.icono-notif svg {
+    width: 20px;
+    height: 20px;
+}
+
+.icono-notif-rojo {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.icono-notif-amarillo {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+/* TEXTO DE NOTIFICACIÓN */
+.info-notif {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+
+    min-width: 0;
+    flex: 1;
+}
+
+.info-notif strong {
+    color: #1e293b;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.info-notif span {
+    color: #64748b;
+    font-size: 12px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+/* SIN NOTIFICACIONES */
+.sin-notificaciones {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    gap: 10px;
+    padding: 28px 15px;
+
+    text-align: center;
+    color: #64748b;
+}
+
+.sin-notificaciones svg {
+    width: 34px;
+    height: 34px;
+    color: #16a34a;
+}
+
+.sin-notificaciones p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+/* CARGANDO */
+.estado-notificaciones {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    gap: 12px;
+    padding: 28px 15px;
+
+    color: #64748b;
+    text-align: center;
+}
+
+.estado-notificaciones p {
+    margin: 0;
+    font-size: 13px;
+}
+
+.spinner-notificaciones {
+    width: 27px;
+    height: 27px;
+
+    border: 3px solid #e2e8f0;
+    border-top-color: #2563eb;
+    border-radius: 50%;
+
+    animation: girarNotificaciones 0.8s linear infinite;
+}
+
+@keyframes girarNotificaciones {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ERROR */
+.error-notificaciones {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+
+    padding: 25px 15px;
+    text-align: center;
+    color: #64748b;
+}
+
+.error-notificaciones svg {
+    width: 30px;
+    height: 30px;
+    color: #dc2626;
+}
+
+.error-notificaciones p {
+    margin: 0;
+    font-size: 13px;
+}
+
+.error-notificaciones button {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 8px;
+
+    background: #2563eb;
+    color: white;
+
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+/* ==========================================================
+   MENÚ HAMBURGUESA
+   ========================================================== */
+
+.btn-hamburguesa {
+    display: none !important;
+}
+
+.sidebar-overlay {
+    display: none;
+}
+
+@media (max-width: 1024px) {
+
+    .btn-hamburguesa {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+
+        width: 42px;
+        height: 42px;
+        min-width: 42px;
+
+        padding: 8px;
+        margin-right: 10px;
+
+        border: 1px solid #cbd5e1;
+        border-radius: 9px;
+
+        background: #f1f5f9;
+        color: #0f172a;
+
+        cursor: pointer;
+        z-index: 2100;
+    }
+
+    .btn-hamburguesa svg {
+        width: 23px;
+        height: 23px;
+    }
+
+    .barra-lateral,
+    aside.barra-lateral {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+
+        width: 260px !important;
+        max-width: 80vw !important;
+        height: 100vh !important;
+
+        z-index: 1300 !important;
+
+        transform: translateX(-100%) !important;
+        transition: transform 0.3s ease !important;
+
+        overflow-y: auto;
+    }
+
+    body.sidebar-abierto .barra-lateral,
+    body.sidebar-abierto aside.barra-lateral {
+        transform: translateX(0) !important;
+    }
+
+    .sidebar-overlay {
+        display: block;
+
+        position: fixed;
+        inset: 0;
+
+        width: 100%;
+        height: 100%;
+
+        background: rgba(15, 23, 42, 0.55);
+        backdrop-filter: blur(2px);
+
+        z-index: 1250;
+
+        opacity: 0;
+        pointer-events: none;
+
+        transition: opacity 0.3s ease;
+    }
+
+    body.sidebar-abierto .sidebar-overlay {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .datos-perfil {
+        display: none !important;
+    }
+
+    .cabecera-superior {
+        display: flex;
+        align-items: center;
+        overflow: visible !important;
+    }
+
+    .logo-cabecera {
+        display: flex;
+        align-items: center;
+    }
+}
+
+/* ==========================================================
+   AJUSTES PARA CELULARES
+   ========================================================== */
+
+@media (max-width: 600px) {
+
+    .cabecera-superior {
+        width: 100%;
+        min-width: 0;
+        padding: 10px 12px;
+    }
+
+    .perfil-acciones {
+        gap: 8px;
+    }
+
+    .boton-campana-amarilla {
+        width: 39px;
+        height: 39px;
+    }
+
+    .enlace-salir span {
+        display: none;
+    }
+
+    .burbuja-notificaciones {
+        position: fixed !important;
+
+        top: 72px !important;
+        right: 12px !important;
+        left: auto !important;
+
+        width: 340px !important;
+        max-width: calc(100vw - 24px) !important;
+
+        z-index: 99999 !important;
+    }
+
+    .lista-notificaciones {
+        max-height: 65vh;
+    }
+}
+
+@media (max-width: 360px) {
+
+    .logo-cabecera {
+        gap: 3px;
+    }
+
+    .btn-hamburguesa {
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+        margin-right: 5px;
+    }
+
+    .perfil-acciones {
+        gap: 5px;
+    }
+
+    .burbuja-notificaciones {
+        right: 8px !important;
+        max-width: calc(100vw - 16px) !important;
+    }
+}
