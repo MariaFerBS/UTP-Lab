@@ -19,18 +19,15 @@ public class GlobalControllerAdvice {
     @ModelAttribute("totalIncidencias")
     public long getTotalIncidencias() {
         try {
-            // 1. Traemos todas las sanciones activas
             List<Sancion> activas = sancionRepositorio.findAll().stream()
                     .filter(s -> !"RESUELTA".equalsIgnoreCase(s.getEstado()) 
                               && !"PAGADA".equalsIgnoreCase(s.getEstado()))
                     .toList();
 
-            // 2. Las agrupamos por reserva y contamos cuántos grupos únicos hay
             return activas.stream()
                     .collect(Collectors.groupingBy(s -> 
                         s.getReserva() != null ? s.getReserva().getIdReserva() : "SIN_RESERVA"))
                     .size();
-
         } catch (Exception e) {
             return 0;
         }

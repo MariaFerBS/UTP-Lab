@@ -36,17 +36,16 @@
                 <div id="listaNotificaciones" class="lista-notificaciones">
                     
                     <!-- CASO 1: HAY NOTIFICACIONES -->
-                    <div th:if="${totalIncidencias != null and totalIncidencias > 0}">
-                        <a th:href="@{/admin/incidencias}" class="item-notificacion">
-                            <div class="icono-notif icono-notif-rojo">
-                                <i data-lucide="alert-triangle"></i>
-                            </div>
-                            <div class="info-notif">
-                                <strong>Tienes incidencias pendientes</strong>
-                                <span th:text="${totalIncidencias} + ' incidencia(s) sin resolver'">1 incidencia sin resolver</span>
-                            </div>
-                        </a>
-                    </div>
+                    <a th:if="${totalIncidencias != null and totalIncidencias > 0}" 
+                       th:href="@{/admin/incidencias}" class="item-notificacion">
+                        <div class="icono-notif icono-notif-rojo">
+                            <i data-lucide="alert-triangle"></i>
+                        </div>
+                        <div class="info-notif">
+                            <strong>Tienes incidencias pendientes</strong>
+                            <span th:text="${totalIncidencias} + ' incidencia(s) sin resolver'">1 incidencia sin resolver</span>
+                        </div>
+                    </a>
 
                     <!-- CASO 2: NO HAY NOTIFICACIONES -->
                     <div th:if="${totalIncidencias == null or totalIncidencias == 0}" 
@@ -54,7 +53,7 @@
                         <i data-lucide="check-circle"></i>
                         <p>No tienes notificaciones pendientes</p>
                     </div>
-                    
+
                 </div>
             </div>
         </div>
