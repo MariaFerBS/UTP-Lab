@@ -1,5 +1,5 @@
 /* ==========================================================================
-   RESET Y BASE
+   RESET Y BASE (Corregido con selector *)
    ========================================================================== */
 * {
     margin: 0;
@@ -8,34 +8,39 @@
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-body {
+html, body {
+    width: 100%;
+    min-height: 100vh;
     background-color: #f1f5f9;
     color: #1e293b;
-    min-height: 100vh;
+    overflow-x: hidden; /* Evita el scroll horizontal */
 }
 
 .contenedor-app {
     display: flex;
     min-height: 100vh;
+    width: 100%;
 }
 
 .area-principal {
     flex: 1;
     display: flex;
     flex-direction: column;
+    min-width: 0; /* Permite que el contenido flexible se reduzca sin desbordarse */
 }
 
 /* ==========================================================================
-   MENÚ LATERAL (SIDEBAR)
+   MENÚ LATERAL (SIDEBAR) - ESTILO BASE (Escritorio)
    ========================================================================== */
 .barra-lateral {
-    width: 220px;
+    width: 240px;
     background-color: #151838;
     color: #94a3b8;
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
     padding: 1.25rem 0.75rem;
+    z-index: 1000;
 }
 
 .logo-lateral {
@@ -80,7 +85,8 @@ body {
     position: relative;
 }
 
-.item-menu i {
+.item-menu i,
+.item-menu svg {
     width: 1.15rem;
     height: 1.15rem;
 }
@@ -96,21 +102,6 @@ body {
     font-weight: 600;
 }
 
-.contador-alerta {
-    position: absolute;
-    right: 0.8rem;
-    background-color: #ef4444;
-    color: #ffffff;
-    font-size: 0.72rem;
-    font-weight: 700;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
 /* ==========================================================================
    BARRA SUPERIOR (TOPBAR)
    ========================================================================== */
@@ -121,40 +112,21 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 2rem;
+    padding: 0 1.5rem;
+    gap: 1rem;
+}
+
+.logo-cabecera {
+    display: none; /* Oculto en escritorio */
+    align-items: center;
+    gap: 6px;
 }
 
 .perfil-acciones {
     display: flex;
     align-items: center;
     gap: 1.25rem;
-}
-
-.icono-campana {
-    position: relative;
-    cursor: pointer;
-    color: #64748b;
-}
-
-.icono-campana i {
-    width: 1.25rem;
-    height: 1.25rem;
-}
-
-.punto-alerta {
-    position: absolute;
-    top: -4px;
-    right: -4px;
-    background-color: #ef4444;
-    color: #ffffff;
-    font-size: 0.65rem;
-    font-weight: 700;
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    margin-left: auto;
 }
 
 .datos-perfil {
@@ -178,7 +150,6 @@ body {
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background-color: #f59e0b;
     color: #ffffff;
     font-weight: 700;
     font-size: 0.85rem;
@@ -186,6 +157,9 @@ body {
     align-items: center;
     justify-content: center;
 }
+
+.avatar-naranja { background-color: #f59e0b; }
+.avatar-azul { background-color: #2563eb; }
 
 .enlace-salir {
     display: flex;
@@ -205,21 +179,38 @@ body {
     background-color: #fef2f2;
 }
 
-.enlace-salir i {
+.enlace-salir i,
+.enlace-salir svg {
     width: 0.9rem;
     height: 0.9rem;
 }
 
 /* ==========================================================================
-   CUERPO PRINCIPAL
+   BOTÓN HAMBURGUESA Y NOTIFICACIONES
    ========================================================================== */
-.seccion-checkout {
-    padding: 2.5rem 3.5rem;
+.btn-hamburguesa {
+    display: none; /* Oculto por defecto en PC */
+    align-items: center;
+    justify-content: center;
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    cursor: pointer;
+    padding: 0.45rem;
+    color: #0f172a;
+    transition: background 0.2s;
 }
 
-/* ==========================================================================
-   CAMPANITA DE NOTIFICACIONES
-   ========================================================================== */
+.btn-hamburguesa:hover {
+    background: #e2e8f0;
+}
+
+.btn-hamburguesa i,
+.btn-hamburguesa svg {
+    width: 22px;
+    height: 22px;
+}
+
 .contenedor-campana-wrapper {
     position: relative;
     display: inline-block;
@@ -227,8 +218,8 @@ body {
 
 .boton-campana-amarilla {
     position: relative;
-    width: 42px;
-    height: 42px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
     border: none;
@@ -238,54 +229,115 @@ body {
     justify-content: center;
     color: #ffffff;
     box-shadow: 0 3px 10px rgba(245, 158, 11, 0.4);
-    transition: transform 0.15s, box-shadow 0.15s;
-}
-
-.boton-campana-amarilla:hover {
-    transform: translateY(-1px) scale(1.05);
-    box-shadow: 0 5px 15px rgba(245, 158, 11, 0.55);
 }
 
 .boton-campana-amarilla i,
 .boton-campana-amarilla svg {
     width: 20px;
     height: 20px;
-    stroke-width: 2.5;
 }
 
-.badge-campana {
-    position: absolute;
-    top: -4px;
-    right: -4px;
+.badge-campana,
+.badge-alerta-roja {
     background-color: #ef4444;
     color: #ffffff;
     font-size: 0.7rem;
     font-weight: 700;
-    min-width: 20px;
-    height: 20px;
+    min-width: 18px;
+    height: 18px;
     padding: 0 5px;
-    border-radius: 10px;
+    border-radius: 9px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 2px solid #ffffff;
-    box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
 }
 
-/* Resto del CSS de campanita y notificaciones... (pégalo aquí igual que lo tenías) */
-
-/* Badge de alerta roja en el menú lateral */
 .badge-alerta-roja {
-  background-color: #ef4444;
-  color: #ffffff;
-  font-size: 0.7rem;
-  font-weight: 700;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  border-radius: 9px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: auto;
+    margin-left: auto;
+}
+
+.badge-campana {
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    border: 2px solid #ffffff;
+}
+
+/* ==========================================================================
+   CUERPO Y SECCION DE CONTENIDO
+   ========================================================================== */
+.seccion-checkout {
+    padding: 2rem 2.5rem;
+}
+
+/* Overlay para oscurecer pantalla al abrir menú en móvil */
+.sidebar-overlay {
+    display: none;
+}
+
+/* ==========================================================================
+   RESPONSIVE (Pantallas menores o iguales a 1024px)
+   ========================================================================== */
+@media (max-width: 1024px) {
+    
+    /* Mostrar botón hamburguesa y logo del header */
+    .btn-hamburguesa {
+        display: inline-flex;
+    }
+
+    .logo-cabecera {
+        display: flex;
+    }
+
+    /* Ocultar sidebar fuera de pantalla hacia la izquierda */
+    .barra-lateral {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        width: 260px;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+        box-shadow: 4px 0 15px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Cuando la clase 'sidebar-abierto' está en body, despliega el sidebar */
+    body.sidebar-abierto .barra-lateral {
+        transform: translateX(0);
+    }
+
+    /* Configurar Overlay activo */
+    .sidebar-overlay {
+        display: block;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(15, 23, 42, 0.5);
+        z-index: 999;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+
+    body.sidebar-abierto .sidebar-overlay {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .seccion-checkout {
+        padding: 1.5rem 1rem;
+    }
+}
+
+@media (max-width: 640px) {
+    /* Ocultar texto de saludo en celulares muy pequeños para liberar espacio */
+    .datos-perfil {
+        display: none;
+    }
+    
+    .cabecera-superior {
+        padding: 0 1rem;
+    }
 }

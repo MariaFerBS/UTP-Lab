@@ -1,9 +1,17 @@
 /* ==========================================================================
-   RESPONSIVE + HAMBURGUESA DEFINITIVA
+   RESPONSIVE + HAMBURGUESA DEFINITIVA (CORREGIDO)
    ========================================================================== */
 
+/* Prevenir scroll horizontal global */
+html, body {
+    overflow-x: hidden;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
 /* --------------------------------------------------------------------------
-   ESCRITORIO: Botón oculto, sidebar visible
+   ESCRITORIO (Mayor a 1024px)
    -------------------------------------------------------------------------- */
 .btn-hamburguesa {
     display: none !important;
@@ -11,109 +19,112 @@
 
 .sidebar-overlay {
     display: none !important;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(15, 23, 42, 0.6);
-    z-index: 998;
-    backdrop-filter: blur(2px);
-}
-
-body.sidebar-abierto .sidebar-overlay {
-    display: block !important;
 }
 
 /* --------------------------------------------------------------------------
-   MÓVIL Y TABLET (Menos de 1024px)
+   MÓVIL Y TABLET (1024px o menos)
    -------------------------------------------------------------------------- */
 @media (max-width: 1024px) {
 
-    /* 1. Botón hamburguesa visible y estilizado */
+    /* 1. Botón hamburguesa visible y clickable */
     .btn-hamburguesa {
-        display: flex !important;
+        display: inline-flex !important;
         align-items: center;
         justify-content: center;
-        background: #f1f5f9 !important; /* Fondo gris claro */
-        border: 1px solid #e2e8f0 !important;
+        background: #f1f5f9 !important;
+        border: 1px solid #cbd5e1 !important;
         border-radius: 8px !important;
-        cursor: pointer;
-        padding: 0.4rem 0.6rem !important;
-        margin-right: 1rem;
+        cursor: pointer !important;
+        padding: 0.5rem !important;
+        margin-right: 0.75rem;
         color: #0f172a !important;
-        z-index: 1000;
-        transition: all 0.2s ease;
+        z-index: 1001 !important;
+        min-width: 40px;
+        min-height: 40px;
     }
 
-    .btn-hamburguesa:hover {
+    .btn-hamburguesa:active {
         background: #e2e8f0 !important;
-        transform: scale(1.05);
+        transform: scale(0.95);
     }
 
     .btn-hamburguesa i,
     .btn-hamburguesa svg {
-        width: 22px !important;
-        height: 22px !important;
-        stroke-width: 2.5 !important;
+        width: 24px !important;
+        height: 24px !important;
+        stroke: #0f172a !important;
+        display: block !important;
     }
 
-    /* 2. Sidebar escondido a la izquierda */
-    .barra-lateral {
+    /* 2. Ocultar la barra lateral fuera de pantalla */
+    .barra-lateral, 
+    aside.barra-lateral {
         position: fixed !important;
         top: 0 !important;
         left: 0 !important;
         height: 100vh !important;
         width: 260px !important;
-        z-index: 999 !important;
+        max-width: 80vw !important;
+        z-index: 1000 !important;
         transform: translateX(-100%) !important;
         transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        box-shadow: 4px 0 15px rgba(0, 0, 0, 0.2);
     }
 
-    /* 3. Sidebar visible cuando se abre */
-    body.sidebar-abierto .barra-lateral {
+    /* 3. Mostrar la barra lateral cuando body tiene .sidebar-abierto */
+    body.sidebar-abierto .barra-lateral,
+    body.sidebar-abierto aside.barra-lateral {
         transform: translateX(0) !important;
     }
 
-    /* 4. El contenido ocupa todo el ancho */
-    .contenedor-app {
+    /* 4. Capa oscura de fondo (Overlay) */
+    .sidebar-overlay {
         display: block !important;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(2px);
+        z-index: 999;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
     }
 
-    .area-principal {
+    body.sidebar-abierto .sidebar-overlay {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    /* 5. Ajuste del área de contenido principal */
+    .contenedor-app, 
+    .area-principal, 
+    main {
         width: 100% !important;
         margin-left: 0 !important;
-        overflow-x: hidden !important;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+        box-sizing: border-box !important;
     }
     
-    /* 5. Ocultar el saludo en móvil para ahorrar espacio */
     .datos-perfil {
         display: none !important;
     }
 }
 
 /* --------------------------------------------------------------------------
-   AJUSTES ADICIONALES PARA MÓVIL (Menos de 768px)
+   AJUSTES PARA PANTALLAS PEQUEÑAS (768px o menos)
    -------------------------------------------------------------------------- */
 @media (max-width: 768px) {
-    .seccion-checkout {
-        padding: 1.5rem 1rem !important;
-    }
-
     .grid-cuatro-metricas-figma,
     .rejilla-laboratorios,
     .rejilla-catalogo,
     .grid-tres-estadisticas-alumno,
     .grid-tres-estados-incidencias,
     .grilla-cubiculos-labs {
-        grid-template-columns: 1fr !important;
-    }
-    
-    .tarjeta-modal,
-    .modal-recibo-contenedor,
-    .modal-checkin-ancho {
-        width: 95% !important;
-        max-width: 100% !important;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important;
+        gap: 1rem !important;
     }
 }

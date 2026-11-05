@@ -5,19 +5,19 @@
 <!-- ========================================================= -->
 <!-- SCRIPTS GLOBALES                                          -->
 <!-- ========================================================= -->
-<th:block th:fragment="scripts">
-    <!-- Librería de íconos (Lucide) -->
+<th:block th:fragment="scriptsAlumno">
+    <!-- Carga de Lucide si no fue cargado previamente -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    
+    <script th:src="@{/js/topbar-alumno.js}"></script>
+
     <script>
-        // Inicializar íconos al cargar
         document.addEventListener("DOMContentLoaded", function () {
+            // Renderiza los iconos de Lucide (incluyendo el boton de hamburguesa)
             if (typeof lucide !== 'undefined') {
                 lucide.createIcons();
             }
         });
 
-        // Función para abrir/cerrar el sidebar en móvil
         function toggleSidebar() {
             document.body.classList.toggle('sidebar-abierto');
             
@@ -25,19 +25,21 @@
             if (!overlay) {
                 overlay = document.createElement('div');
                 overlay.className = 'sidebar-overlay';
-                overlay.onclick = toggleSidebar; // Cierra al tocar el fondo
+                // Cerrar al hacer clic sobre el fondo oscuro
+                overlay.addEventListener('click', function () {
+                    document.body.classList.remove('sidebar-abierto');
+                });
                 document.body.appendChild(overlay);
             }
         }
 
-        // Cerrar el menú si se agranda la ventana a tamaño escritorio (más de 1024px)
-        window.addEventListener('resize', () => {
+        // Forzar cierre si la ventana se expande a escritorio
+        window.addEventListener('resize', function () {
             if (window.innerWidth > 1024) {
                 document.body.classList.remove('sidebar-abierto');
             }
         });
     </script>
-
 </th:block>
 
 </body>
