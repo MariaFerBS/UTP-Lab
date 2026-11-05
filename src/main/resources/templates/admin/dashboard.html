@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: head('Dashboard')}"></head>
+<head th:replace="~{fragments/head :: head('Dashboard')}">
+  <link rel="stylesheet" th:href="@{/css/base.css}">
+<link rel="stylesheet" th:href="@{/css/admin.css}">
+<link rel="stylesheet" th:href="@{/css/responsive.css}">
+</head>
 <body>
   <div class="contenedor-app">
     

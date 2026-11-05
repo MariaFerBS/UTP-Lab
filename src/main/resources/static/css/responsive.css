@@ -1239,3 +1239,553 @@ html, body {
         max-height: 65vh !important;
     }
 }
+
+/* ==========================================================
+   RESPONSIVE DEL ADMINISTRADOR - DASHBOARD
+   ========================================================== */
+
+/* Evitar que los elementos internos fuercen el ancho */
+.area-principal,
+.contenedor-app,
+.grid-principal-dash-figma,
+.grid-inferior-dash-figma,
+.grid-cuatro-metricas-figma {
+    min-width: 0 !important;
+    max-width: 100% !important;
+}
+
+/* TABLETS Y PANTALLAS MEDIANAS */
+@media screen and (max-width: 1024px) {
+
+    /* Contenido principal */
+    .area-principal {
+        width: 100% !important;
+        margin-left: 0 !important;
+    }
+
+    /* Cuatro tarjetas de estadísticas: 2 por fila */
+    .grid-cuatro-metricas-figma {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 16px !important;
+        width: 100% !important;
+    }
+
+    /* Paneles principales del dashboard */
+    .grid-principal-dash-figma,
+    .grid-inferior-dash-figma {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 18px !important;
+        width: 100% !important;
+    }
+
+    /* Evitar que las tarjetas se desborden */
+    .grid-cuatro-metricas-figma > *,
+    .grid-principal-dash-figma > *,
+    .grid-inferior-dash-figma > * {
+        min-width: 0 !important;
+        max-width: 100% !important;
+    }
+}
+
+/* CELULARES */
+@media screen and (max-width: 600px) {
+
+    /* Espacio del dashboard */
+    .area-principal {
+        width: 100% !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* Contenedor de contenido */
+    .contenido-principal,
+    .contenedor-dashboard,
+    .dashboard-contenido {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+    }
+
+    /* Estadísticas: una tarjeta por fila */
+    .grid-cuatro-metricas-figma {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 12px !important;
+        width: 100% !important;
+    }
+
+    .grid-cuatro-metricas-figma > * {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    /* Estados de laboratorios y agenda */
+    .grid-principal-dash-figma,
+    .grid-inferior-dash-figma {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 14px !important;
+        width: 100% !important;
+    }
+
+    /* Tarjetas interiores */
+    .grid-principal-dash-figma > *,
+    .grid-inferior-dash-figma > * {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+    }
+
+    /* Encabezados */
+    .cabecera-superior {
+        width: 100% !important;
+        padding: 8px 12px !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 10px !important;
+    }
+
+    .logo-cabecera {
+        flex: 1 !important;
+        min-width: 0 !important;
+    }
+
+    .perfil-acciones {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+    }
+
+    .datos-perfil {
+        display: none !important;
+    }
+
+    /* Títulos */
+    h1 {
+        overflow-wrap: break-word;
+        max-width: 100%;
+    }
+
+    /* Evitar desbordamiento horizontal */
+    body {
+        overflow-x: hidden !important;
+    }
+}
+
+
+/* ==========================================================
+   RESPONSIVE ADMINISTRADOR - DASHBOARD UTP +LAB
+   Utiliza las clases reales de dashboard.html
+   ========================================================== */
+
+/* Evitar desbordamientos */
+.contenedor-app,
+.area-principal,
+.seccion-checkout {
+    min-width: 0 !important;
+    max-width: 100% !important;
+}
+
+.area-principal {
+    flex: 1 1 auto;
+}
+
+/* ==========================================================
+   TABLETS Y PANTALLAS HASTA 1024PX
+   ========================================================== */
+
+@media screen and (max-width: 1024px) {
+
+    .contenedor-app {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .area-principal {
+        width: 100% !important;
+        margin-left: 0 !important;
+    }
+
+    .seccion-checkout {
+        width: 100% !important;
+        padding: 20px !important;
+    }
+
+    /* Encabezado del dashboard */
+    .fila-dashboard-header {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        align-items: flex-start !important;
+        gap: 15px !important;
+        width: 100% !important;
+    }
+
+    .acciones-header-dashboard {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        align-items: center !important;
+        gap: 12px !important;
+        max-width: 100% !important;
+    }
+
+    /* Cuatro métricas: dos columnas */
+    .grid-cuatro-metricas-figma {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 16px !important;
+        width: 100% !important;
+    }
+
+    .card-metrica-figma {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+    }
+
+    /* Paneles principales: una columna */
+    .grid-principal-dash-figma,
+    .grid-inferior-dash-figma {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 16px !important;
+        width: 100% !important;
+    }
+
+    .grid-principal-dash-figma > *,
+    .grid-inferior-dash-figma > * {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+    }
+
+    /* Cubículos: dos columnas */
+    .grilla-cubiculos-labs {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 12px !important;
+        width: 100% !important;
+    }
+
+    .tarjeta-cubiculo-item {
+        min-width: 0 !important;
+        width: 100% !important;
+    }
+
+    /* Agenda */
+    .fila-agenda-item {
+        min-width: 0 !important;
+        flex-wrap: wrap !important;
+        gap: 10px !important;
+    }
+
+    /* Incidencias y alertas */
+    .fila-incidencia-item,
+    .card-alerta-amarilla-stock {
+        min-width: 0 !important;
+        max-width: 100% !important;
+        flex-wrap: wrap !important;
+    }
+}
+
+/* ==========================================================
+   CELULARES - 600PX O MENOS
+   ========================================================== */
+
+@media screen and (max-width: 600px) {
+
+    /* Contenido */
+    .seccion-checkout {
+        width: 100% !important;
+        padding: 16px 12px !important;
+        overflow: hidden !important;
+    }
+
+    /* Encabezado */
+    .fila-dashboard-header {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 12px !important;
+        margin-bottom: 18px !important;
+    }
+
+    .fila-dashboard-header > div:first-child {
+        width: 100% !important;
+    }
+
+    .titulo-seccion-catalogo {
+        font-size: 1.7rem !important;
+        line-height: 1.2 !important;
+    }
+
+    .subtitulo-seccion-catalogo {
+        font-size: 0.9rem !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    .acciones-header-dashboard {
+        width: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+    }
+
+    .selector-fecha-dashboard {
+        width: 100% !important;
+        max-width: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 5px !important;
+        flex-wrap: nowrap !important;
+    }
+
+    .input-fecha-dashboard {
+        min-width: 0 !important;
+        width: 100% !important;
+        flex: 1 !important;
+        font-size: 0.85rem !important;
+    }
+
+    .badge-sistema-activo {
+        align-self: flex-start !important;
+        max-width: 100% !important;
+    }
+
+    /* Métricas: dos columnas */
+    .grid-cuatro-metricas-figma {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 10px !important;
+        width: 100% !important;
+        margin-bottom: 16px !important;
+    }
+
+    .card-metrica-figma {
+        min-width: 0 !important;
+        width: 100% !important;
+        padding: 14px !important;
+        min-height: 150px !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    .num-grande-metrica {
+        font-size: 2rem !important;
+    }
+
+    .label-titulo-metrica {
+        font-size: 0.88rem !important;
+        line-height: 1.25 !important;
+    }
+
+    .label-sub-metrica {
+        font-size: 0.75rem !important;
+        line-height: 1.3 !important;
+    }
+
+    /* Paneles uno debajo del otro */
+    .grid-principal-dash-figma,
+    .grid-inferior-dash-figma {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 14px !important;
+        width: 100% !important;
+        margin-bottom: 14px !important;
+    }
+
+    .card-panel-blanco {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        padding: 16px !important;
+        overflow: hidden !important;
+    }
+
+    /* Cabeceras de paneles */
+    .cabecera-panel-flex {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        align-items: flex-start !important;
+        gap: 10px !important;
+    }
+
+    .titulo-panel-txt {
+        font-size: 1rem !important;
+        line-height: 1.3 !important;
+    }
+
+    /* Leyenda de estados */
+    .leyenda-dots-estados {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 8px 12px !important;
+        width: 100% !important;
+    }
+
+    .item-leyenda-dot {
+        font-size: 0.72rem !important;
+    }
+
+    /* Cubículos */
+    .grilla-cubiculos-labs {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 10px !important;
+        width: 100% !important;
+    }
+
+    .tarjeta-cubiculo-item {
+        width: 100% !important;
+        min-width: 0 !important;
+        padding: 12px !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    .fila-cubiculo-top {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        align-items: center !important;
+        gap: 5px !important;
+    }
+
+    .txt-cod-cubiculo {
+        font-size: 0.78rem !important;
+    }
+
+    .badge-tag-estado {
+        font-size: 0.68rem !important;
+    }
+
+    .txt-nombre-lab-cub {
+        font-size: 0.88rem !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    .txt-desc-bloque-cub {
+        font-size: 0.72rem !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    /* Agenda */
+    .lista-agenda-hoy {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .fila-agenda-item {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        align-items: center !important;
+        gap: 8px !important;
+        padding: 12px 0 !important;
+        width: 100% !important;
+    }
+
+    .info-solicitante-col {
+        flex: 1 1 120px !important;
+        min-width: 0 !important;
+    }
+
+    .nom-lab-agenda,
+    .nom-solic-agenda {
+        overflow-wrap: anywhere !important;
+    }
+
+    .badge-agenda-pill {
+        font-size: 0.7rem !important;
+    }
+
+    /* Incidencias */
+    .fila-incidencia-item {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 10px !important;
+        padding: 12px 0 !important;
+        width: 100% !important;
+    }
+
+    .info-incidencia-col {
+        flex: 1 !important;
+        min-width: 0 !important;
+    }
+
+    .item-danado-txt,
+    .estudiante-responsable-txt {
+        overflow-wrap: anywhere !important;
+    }
+
+    .monto-deuda-rojo {
+        white-space: nowrap !important;
+    }
+
+    /* Alertas de stock */
+    .card-alerta-amarilla-stock {
+        display: flex !important;
+        align-items: flex-start !important;
+        gap: 10px !important;
+        width: 100% !important;
+        padding: 12px !important;
+    }
+
+    .info-alerta-stock-col {
+        flex: 1 !important;
+        min-width: 0 !important;
+    }
+
+    .nombre-insumo-stock {
+        overflow-wrap: anywhere !important;
+    }
+
+    /* Banner de inspecciones */
+    .banner-alerta-amarillo {
+        width: 100% !important;
+        padding: 14px !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+
+    .banner-alerta-amarillo > a {
+        text-align: center !important;
+    }
+}
+
+/* ==========================================================
+   CELULARES PEQUEÑOS - 380PX O MENOS
+   ========================================================== */
+
+@media screen and (max-width: 380px) {
+
+    .seccion-checkout {
+        padding: 12px 9px !important;
+    }
+
+    .grid-cuatro-metricas-figma {
+        gap: 8px !important;
+    }
+
+    .card-metrica-figma {
+        padding: 11px !important;
+        min-height: 140px !important;
+    }
+
+    .num-grande-metrica {
+        font-size: 1.7rem !important;
+    }
+
+    .label-titulo-metrica {
+        font-size: 0.8rem !important;
+    }
+
+    .grilla-cubiculos-labs {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    .selector-fecha-dashboard {
+        gap: 3px !important;
+    }
+}
+
