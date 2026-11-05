@@ -23,34 +23,38 @@
                 <i data-lucide="bell"></i>
                 <span class="badge-campana" 
                       th:if="${totalIncidencias != null and totalIncidencias > 0}" 
-                      th:text="${totalIncidencias}">2</span>
+                      th:text="${totalIncidencias}">1</span>
             </button>
 
-            <!-- Burbuja de Notificaciones (Usa 'hidden' en lugar de style="display: none") -->
+            <!-- Burbuja de Notificaciones -->
             <div id="burbujaNotificaciones" class="burbuja-notificaciones" hidden>
                 <div class="cabecera-burbuja">
                     <strong>Notificaciones</strong>
                     <button type="button" class="btn-cerrar-burbuja" onclick="cerrarNotificaciones()">✕</button>
                 </div>
                 
-                <!-- ID importante para que el JS sepa dónde inyectar -->
                 <div id="listaNotificaciones" class="lista-notificaciones">
-                    <a th:href="@{/admin/incidencias}" class="item-notificacion" 
-                       th:if="${totalIncidencias != null and totalIncidencias > 0}">
-                        <div class="icono-notif icono-notif-rojo">
-                            <i data-lucide="alert-triangle"></i>
-                        </div>
-                        <div class="info-notif">
-                            <strong>Tienes incidencias pendientes</strong>
-                            <span th:text="${totalIncidencias} + ' incidencia(s) sin resolver'">2 incidencias sin resolver</span>
-                        </div>
-                    </a>
+                    
+                    <!-- CASO 1: HAY NOTIFICACIONES -->
+                    <div th:if="${totalIncidencias != null and totalIncidencias > 0}">
+                        <a th:href="@{/admin/incidencias}" class="item-notificacion">
+                            <div class="icono-notif icono-notif-rojo">
+                                <i data-lucide="alert-triangle"></i>
+                            </div>
+                            <div class="info-notif">
+                                <strong>Tienes incidencias pendientes</strong>
+                                <span th:text="${totalIncidencias} + ' incidencia(s) sin resolver'">1 incidencia sin resolver</span>
+                            </div>
+                        </a>
+                    </div>
 
+                    <!-- CASO 2: NO HAY NOTIFICACIONES -->
                     <div th:if="${totalIncidencias == null or totalIncidencias == 0}" 
                          class="sin-notificaciones">
                         <i data-lucide="check-circle"></i>
                         <p>No tienes notificaciones pendientes</p>
                     </div>
+                    
                 </div>
             </div>
         </div>
