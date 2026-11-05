@@ -1,4 +1,3 @@
-
 /* ==========================================================
    TOPBAR ADMINISTRADOR
    NOTIFICACIONES + MENÚ HAMBURGUESA
@@ -26,22 +25,28 @@ function toggleNotificaciones(event) {
     if (event) event.stopPropagation();
 
     const burbuja = document.getElementById("burbujaNotificaciones");
+    const boton = document.querySelector(".boton-campana-amarilla");
 
     if (!burbuja) return;
 
-    const estaAbierta = burbuja.classList.contains("notificaciones-abiertas");
-
-    if (estaAbierta) {
+    // Si está abierto, cerrarlo
+    if (!burbuja.hidden) {
         cerrarNotificaciones();
-    } else {
-        cerrarSidebarSiAbierto();
+        return;
+    }
 
-        burbuja.style.display = "block";
-        burbuja.classList.add("notificaciones-abiertas");
+    // Cerrar sidebar antes de abrir
+    cerrarSidebar();
 
-        if (typeof lucide !== "undefined") {
-            lucide.createIcons();
-        }
+    // Mostrar panel
+    burbuja.hidden = false;
+
+    if (boton) {
+        boton.setAttribute("aria-expanded", "true");
+    }
+
+    if (typeof lucide !== "undefined") {
+        lucide.createIcons();
     }
 }
 
@@ -49,12 +54,15 @@ function toggleNotificaciones(event) {
 function cerrarNotificaciones() {
 
     const burbuja = document.getElementById("burbujaNotificaciones");
+    const boton = document.querySelector(".boton-campana-amarilla");
 
-    if (!burbuja) return;
+    if (burbuja) {
+        burbuja.hidden = true;
+    }
 
-    burbuja.style.display = "none";
-    burbuja.classList.remove("notificaciones-abiertas");
-
+    if (boton) {
+        boton.setAttribute("aria-expanded", "false");
+    }
 }
 
 
@@ -63,12 +71,11 @@ function cerrarNotificaciones() {
 document.addEventListener("click", function (event) {
 
     const burbuja = document.getElementById("burbujaNotificaciones");
-
     const boton = document.querySelector(".boton-campana-amarilla");
 
-    if (!burbuja) return;
-
     if (
+        burbuja &&
+        !burbuja.hidden &&
         !burbuja.contains(event.target) &&
         (!boton || !boton.contains(event.target))
     ) {
@@ -87,22 +94,14 @@ function crearOverlaySidebar() {
     let overlay = document.querySelector(".sidebar-overlay");
 
     if (!overlay) {
-
         overlay = document.createElement("div");
-
         overlay.className = "sidebar-overlay";
-
         document.body.appendChild(overlay);
-
     }
 
-    // Cerrar menú al tocar el fondo oscuro
     overlay.onclick = function () {
-
         cerrarSidebar();
-
     };
-
 }
 
 
@@ -113,21 +112,12 @@ function toggleSidebar() {
     crearOverlaySidebar();
 
     document.body.classList.toggle("sidebar-abierto");
-
 }
 
 
 function cerrarSidebar() {
 
     document.body.classList.remove("sidebar-abierto");
-
-}
-
-
-function cerrarSidebarSiAbierto() {
-
-    document.body.classList.remove("sidebar-abierto");
-
 }
 
 
@@ -138,11 +128,8 @@ function cerrarSidebarSiAbierto() {
 document.addEventListener("keydown", function (event) {
 
     if (event.key === "Escape") {
-
         cerrarNotificaciones();
-
         cerrarSidebar();
-
     }
 
 });
@@ -155,11 +142,8 @@ document.addEventListener("keydown", function (event) {
 window.addEventListener("resize", function () {
 
     if (window.innerWidth > 1024) {
-
         cerrarSidebar();
-
         cerrarNotificaciones();
-
     }
 
 });

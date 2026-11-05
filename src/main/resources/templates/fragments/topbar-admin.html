@@ -16,6 +16,8 @@
     </div>
 
     <div class="perfil-acciones">
+        
+        <!-- Campanita con burbuja -->
         <div class="contenedor-campana-wrapper">
             <button type="button" class="boton-campana-amarilla" onclick="toggleNotificaciones(event)">
                 <i data-lucide="bell"></i>
@@ -24,13 +26,15 @@
                       th:text="${totalIncidencias}">2</span>
             </button>
 
-            <div id="burbujaNotificaciones" class="burbuja-notificaciones" style="display: none;">
+            <!-- Burbuja de Notificaciones (Usa 'hidden' en lugar de style="display: none") -->
+            <div id="burbujaNotificaciones" class="burbuja-notificaciones" hidden>
                 <div class="cabecera-burbuja">
                     <strong>Notificaciones</strong>
                     <button type="button" class="btn-cerrar-burbuja" onclick="cerrarNotificaciones()">✕</button>
                 </div>
                 
-                <div class="lista-notificaciones">
+                <!-- ID importante para que el JS sepa dónde inyectar -->
+                <div id="listaNotificaciones" class="lista-notificaciones">
                     <a th:href="@{/admin/incidencias}" class="item-notificacion" 
                        th:if="${totalIncidencias != null and totalIncidencias > 0}">
                         <div class="icono-notif icono-notif-rojo">
