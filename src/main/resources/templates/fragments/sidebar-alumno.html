@@ -42,6 +42,10 @@
                   th:if="${numIncidencias != null and numIncidencias > 0}" 
                   th:text="${numIncidencias}">1</span>
         </a>
+        <a th:href="@{/alumno/faq}" class="item-sidebar" th:classappend="${activePage == 'faq' ? 'activo' : ''}">
+            <i data-lucide="help-circle"></i>
+            <span>Preguntas Frecuentes</span>
+        </a>
     </nav>
 </aside>
 

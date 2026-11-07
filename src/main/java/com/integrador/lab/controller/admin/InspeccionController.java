@@ -1,7 +1,6 @@
 package com.integrador.lab.controller.admin;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -9,7 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -74,7 +72,6 @@ public class InspeccionController {
             HttpSession sesion, 
             Model modelo) {
 
-        // 1. Calcular la fecha de consulta
         java.time.LocalDate fechaConsulta = java.time.LocalDate.now();
         if (fecha != null && !fecha.isEmpty()) {
             try {
@@ -84,15 +81,16 @@ public class InspeccionController {
             }
         }
 
-        // 2. Traer reservas de ESA fecha (EN_USO, DEVUELTA e INSPECCIONADA)
         List<Reserva> enUso = reservaRepositorio.findByEstado("EN_USO");
         List<Reserva> devueltas = reservaRepositorio.findByEstado("DEVUELTA");
         List<Reserva> inspeccionadas = reservaRepositorio.findByEstado("INSPECCIONADA");
+        List<Reserva> conIncidencia = reservaRepositorio.findByEstado("CON_INCIDENCIA");
         
         List<Reserva> todasLasPendientes = new ArrayList<>();
         if (enUso != null) todasLasPendientes.addAll(enUso);
         if (devueltas != null) todasLasPendientes.addAll(devueltas);
         if (inspeccionadas != null) todasLasPendientes.addAll(inspeccionadas);
+        if (conIncidencia != null) todasLasPendientes.addAll(conIncidencia);
 
         final java.time.LocalDate fechaFinal = fechaConsulta;
 
@@ -104,7 +102,6 @@ public class InspeccionController {
             listaInspeccion.add(convertirADto(r));
         }
 
-        // 👇 ORDENAR: Primero las que están DEVUELTA (pendientes), luego las INSPECCIONADA (historial)
         listaInspeccion.sort((a, b) -> {
             boolean aEsPendiente = "DEVUELTA".equals(a.getEstado());
             boolean bEsPendiente = "DEVUELTA".equals(b.getEstado());
@@ -113,10 +110,7 @@ public class InspeccionController {
             return 0;
         });
 
-
         modelo.addAttribute("inspecciones", listaInspeccion);
-        
-        
         modelo.addAttribute("fechaConsulta", fechaConsulta.toString());
         modelo.addAttribute("fechaAnterior", fechaConsulta.minusDays(1).toString());
         modelo.addAttribute("fechaSiguiente", fechaConsulta.plusDays(1).toString());
@@ -124,7 +118,6 @@ public class InspeccionController {
         return "admin/inspeccion";
     }
 
-    // Método auxiliar para convertir Reserva a DTO
     private InspeccionCardDto convertirADto(Reserva r) {
         List<ReservaIntegrante> integrantes = reservaIntegranteRepositorio.findByReserva_IdReserva(r.getIdReserva());
         List<String> nombresIntegrantes = new ArrayList<>();
@@ -143,6 +136,22 @@ public class InspeccionController {
         String horario = (r.getHoraInicio() != null && r.getHoraFin() != null)
                 ? r.getHoraInicio() + "–" + r.getHoraFin() : "09:00–11:00";
 
+        // 👇 NUEVA LÓGICA SEGURA PARA OBTENER ENCARGADO Y HORA 👇
+        String nombreEncargado = null;
+        String horaAccion = null;
+
+        try {
+            if (r.getEncargadoInspeccion() != null) {
+                nombreEncargado = r.getEncargadoInspeccion().getNombre() + " " + r.getEncargadoInspeccion().getApellido();
+            }
+            if (r.getFechaHoraInspeccion() != null) {
+                horaAccion = r.getFechaHoraInspeccion().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
+            }
+        } catch (Exception e) {
+            // Por si acaso hay un error al leer los datos
+        }
+        // 👆 FIN NUEVA LÓGICA 👆
+
         return new InspeccionCardDto(
                 r.getIdReserva(),
                 labNombre,
@@ -151,19 +160,19 @@ public class InspeccionController {
                 (r.getFechaReserva() != null ? r.getFechaReserva().toString() : ""),
                 horario,
                 r.getEstado(),
-                nombresIntegrantes
+                nombresIntegrantes,
+                nombreEncargado, // 👈 Se lo pasamos al DTO
+                horaAccion       // 👈 Se lo pasamos al DTO
         );
     }
 
-    // 2. MODAL: DETALLE DE INSPECCIÓN
+    // 2. MODAL: DETALLE DE INSPECCIÓN (Para el botón Ver Resumen)
     @GetMapping("/api/{idReserva}")
     @ResponseBody
     @Transactional(readOnly = true)
     public ResponseEntity<?> obtenerDetalleInspeccion(@PathVariable("idReserva") String idReserva) {
         Optional<Reserva> resOpt = reservaRepositorio.findById(idReserva);
-        if (resOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
+        if (resOpt.isEmpty()) return ResponseEntity.notFound().build();
 
         Reserva r = resOpt.get();
         List<ReservaItem> items = reservaItemRepositorio.findByReserva_IdReserva(idReserva);
@@ -183,35 +192,25 @@ public class InspeccionController {
                 if (cat.contains("EPP")) {
                     String nombreMin = p.getNombre().toLowerCase();
                     boolean esDeVenta = (p.getPrecioVenta() != null && p.getPrecioVenta().compareTo(BigDecimal.ZERO) > 0);
-
                     if (!esDeVenta) {
                         if (nombreMin.contains("bata")) tieneBata = true;
                         if (nombreMin.contains("gafa") || nombreMin.contains("lente")) tieneGafas = true;
 
                         listaEppsSinCosto.add(new ItemInspeccionDto(
-                                p.getIdProducto(),
-                                p.getNombre(),
-                                reposicion,
+                                p.getIdProducto(), p.getNombre(), reposicion,
                                 nombreMin.contains("bata") ? "🥼" : "🥽"
                         ));
                     }
                 } else {
                     listaInsumosPrestados.add(new ItemInspeccionDto(
-                            p.getIdProducto(),
-                            p.getNombre(),
-                            reposicion,
-                            "📦"
+                            p.getIdProducto(), p.getNombre(), reposicion, "📦"
                     ));
                 }
             }
         }
 
-        if (!tieneBata) {
-            listaEppsSinCosto.add(new ItemInspeccionDto("EPP-OBL-BATA", "Bata de laboratorio", new BigDecimal("50.00"), "🥼"));
-        }
-        if (!tieneGafas) {
-            listaEppsSinCosto.add(new ItemInspeccionDto("EPP-OBL-GAFAS", "Gafas de seguridad", new BigDecimal("25.00"), "🥽"));
-        }
+        if (!tieneBata) listaEppsSinCosto.add(new ItemInspeccionDto("EPP-OBL-BATA", "Bata de laboratorio", new BigDecimal("50.00"), "🥼"));
+        if (!tieneGafas) listaEppsSinCosto.add(new ItemInspeccionDto("EPP-OBL-GAFAS", "Gafas de seguridad", new BigDecimal("25.00"), "🥽"));
 
         String labNombre = (r.getLaboratorio() != null) ? r.getLaboratorio().getNombre() : "Laboratorio";
         String horario = (r.getHoraInicio() != null && r.getHoraFin() != null)
@@ -227,99 +226,7 @@ public class InspeccionController {
         return ResponseEntity.ok(respuesta);
     }
 
-    // 3. FINALIZAR INSPECCIÓN
-    @PostMapping("/finalizar/{idReserva}")
-    @ResponseBody
-    @Transactional
-    public ResponseEntity<?> finalizarInspeccion(
-            @PathVariable("idReserva") String idReserva,
-            @RequestBody FinalizarInspeccionRequest req) {
-
-        Optional<Reserva> resOpt = reservaRepositorio.findById(idReserva);
-        if (resOpt.isEmpty()) {
-            return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Reserva no encontrada"));
-        }
-
-        Reserva r = resOpt.get();
-        List<ReservaIntegrante> integrantes = reservaIntegranteRepositorio.findByReserva_IdReserva(idReserva);
-        boolean huboDanios = (req.getDanados() != null && !req.getDanados().isEmpty());
-
-        if (huboDanios) {
-            for (ReservaIntegrante ri : integrantes) {
-                Alumno alumno = ri.getAlumno();
-                if (alumno != null) {
-                    alumno.setEstadoCuenta("BLOQUEADO_POR_DEUDA");
-                    alumnoRepositorio.save(alumno);
-
-                    for (DanioItemDto d : req.getDanados()) {
-                        Producto prodDanado = null;
-                        if (d.getIdProducto() != null && !d.getIdProducto().startsWith("EPP-OBL")) {
-                            prodDanado = productoRepositorio.findById(d.getIdProducto()).orElse(null);
-                        }
-
-                        BigDecimal costoSancion = (d.getCostoReposicion() != null && d.getCostoReposicion().compareTo(BigDecimal.ZERO) > 0)
-                                ? d.getCostoReposicion()
-                                : (prodDanado != null && prodDanado.getCostoReposicion() != null ? prodDanado.getCostoReposicion() : new BigDecimal("50.00"));
-
-                        String motivo = (d.getMotivo() != null && !d.getMotivo().isBlank())
-                                ? d.getMotivo()
-                                : "Daño en " + d.getNombre() + " en inspección";
-
-                        int randomTresDigitos = (int) (Math.random() * 900) + 100;
-                        String idSancion = "S" + randomTresDigitos;
-
-                        Sancion sancion = new Sancion(
-                                idSancion,
-                                r,
-                                alumno,
-                                prodDanado,
-                                motivo,
-                                costoSancion,
-                                "PENDIENTE"
-                        );
-                        sancion.setFechaSancion(LocalDateTime.now());
-                        sancionRepositorio.save(sancion);
-                    }
-                }
-            }
-            r.setEstado("CON_INCIDENCIA");
-        } else {
-            r.setEstado("INSPECCIONADA");
-        }
-
-        reservaRepositorio.save(r);
-
-        Laboratorio lab = r.getLaboratorio();
-        if (lab != null) {
-            laboratorioRepositorio.save(lab);
-        }
-
-        Map<String, Object> resp = new HashMap<>();
-        resp.put("status", "ok");
-        resp.put("huboDanios", huboDanios);
-        return ResponseEntity.ok(resp);
-    }
-
-    // 4. REGISTRAR SALIDA (CHECK-OUT)
-    @PostMapping("/checkout/{idReserva}")
-    @ResponseBody
-    @Transactional
-    public ResponseEntity<?> registrarCheckout(@PathVariable("idReserva") String idReserva) {
-        Optional<Reserva> resOpt = reservaRepositorio.findById(idReserva);
-        if (resOpt.isEmpty()) {
-            return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Reserva no encontrada"));
-        }
-
-        Reserva r = resOpt.get();
-        if (!"EN_USO".equals(r.getEstado())) {
-            return ResponseEntity.badRequest().body(Collections.singletonMap("error", "La reserva no está en uso"));
-        }
-
-        r.setEstado("DEVUELTA"); 
-        reservaRepositorio.save(r);
-
-        return ResponseEntity.ok(Collections.singletonMap("status", "ok"));
-    }
+    // 3. LOS MÉTODOS DE FINALIZAR Y CHECKOUT LOS DEJAMOS POR COMPATIBILIDAD (Aunque el admin ya no los usa)
 
     // DTOs
     public static class InspeccionCardDto {
@@ -331,8 +238,10 @@ public class InspeccionController {
         private String horario;
         private String estado;
         private List<String> integrantes;
+        private String nombreEncargado; // 👈 NUEVO CAMPO
+        private String horaAccion;      // 👈 NUEVO CAMPO
 
-        public InspeccionCardDto(String idReserva, String laboratorio, String tipoLab, String cubiculo, String fecha, String horario, String estado, List<String> integrantes) {
+        public InspeccionCardDto(String idReserva, String laboratorio, String tipoLab, String cubiculo, String fecha, String horario, String estado, List<String> integrantes, String nombreEncargado, String horaAccion) {
             this.idReserva = idReserva;
             this.laboratorio = laboratorio;
             this.tipoLab = tipoLab;
@@ -341,6 +250,8 @@ public class InspeccionController {
             this.horario = horario;
             this.estado = estado;
             this.integrantes = integrantes;
+            this.nombreEncargado = nombreEncargado;
+            this.horaAccion = horaAccion;
         }
 
         public String getIdReserva() { return idReserva; }
@@ -351,6 +262,8 @@ public class InspeccionController {
         public String getHorario() { return horario; }
         public String getEstado() { return estado; }
         public List<String> getIntegrantes() { return integrantes; }
+        public String getNombreEncargado() { return nombreEncargado; } // 👈 GETTER
+        public String getHoraAccion() { return horaAccion; }           // 👈 GETTER
     }
 
     public static class ItemInspeccionDto {
@@ -370,27 +283,5 @@ public class InspeccionController {
         public String getNombre() { return nombre; }
         public BigDecimal getCostoReposicion() { return costoReposicion; }
         public String getEmoji() { return emoji; }
-    }
-
-    public static class FinalizarInspeccionRequest {
-        private List<DanioItemDto> danados;
-        public List<DanioItemDto> getDanados() { return danados; }
-        public void setDanados(List<DanioItemDto> danados) { this.danados = danados; }
-    }
-
-    public static class DanioItemDto {
-        private String idProducto;
-        private String nombre;
-        private BigDecimal costoReposicion;
-        private String motivo;
-
-        public String getIdProducto() { return idProducto; }
-        public void setIdProducto(String idProducto) { this.idProducto = idProducto; }
-        public String getNombre() { return nombre; }
-        public void setNombre(String nombre) { this.nombre = nombre; }
-        public BigDecimal getCostoReposicion() { return costoReposicion; }
-        public void setCostoReposicion(BigDecimal costoReposicion) { this.costoReposicion = costoReposicion; }
-        public String getMotivo() { return motivo; }
-        public void setMotivo(String motivo) { this.motivo = motivo; }
     }
 }

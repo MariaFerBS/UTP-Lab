@@ -980,6 +980,14 @@ public class AlumnoPortalController {
 
         return notificaciones;
     }
+    @GetMapping("/faq")
+public String verFaq(HttpSession sesion) {
+    // Verificamos que el alumno haya iniciado sesión
+    if (sesion.getAttribute("usuarioLogueado") == null) {
+        return "redirect:/login";
+    }
+    return "alumno/faq";
+}
 
     // =========================================================================
     // DTOs AUXILIARES

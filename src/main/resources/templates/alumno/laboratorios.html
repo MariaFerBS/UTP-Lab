@@ -1158,6 +1158,149 @@
       </div>
     </div>
 
+    <!-- ========================================== -->
+<!-- MODAL DE GUÍA INTERACTIVA PARA ALUMNOS     -->
+<!-- ========================================== -->
+<div id="modalGuiaInteractiva" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(4px); z-index: 99999; align-items: center; justify-content: center;">
+    <div style="background: white; border-radius: 20px; width: 90%; max-width: 480px; padding: 2.5rem 2rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.3); position: relative; overflow: hidden; text-align: center;">
+        
+        <!-- Barra de progreso superior -->
+        <div style="position: absolute; top: 0; left: 0; height: 6px; background: #2563eb; transition: width 0.4s ease; width: 0%;" id="barraProgresoGuia"></div>
+
+        <!-- Botón de cerrar (X) -->
+        <button onclick="cerrarGuia(true)" style="position: absolute; top: 1rem; right: 1rem; background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; color: #64748b; font-weight: bold; transition: background 0.2s;">✕</button>
+
+        <!-- Contenido dinámico -->
+        <div id="contenidoGuia" style="margin-top: 1rem;">
+            <!-- El JS llenará esto -->
+        </div>
+
+        <!-- Controles -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2.5rem;">
+            <button onclick="cerrarGuia(true)" style="background: none; border: none; color: #94a3b8; font-weight: 600; cursor: pointer; font-size: 0.9rem; padding: 0;">Omitir</button>
+            
+            <div style="display: flex; gap: 0.5rem;">
+                <button id="btnAtrasGuia" onclick="pasoAnteriorGuia()" style="display: none; background: #f1f5f9; color: #475569; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer;">Atrás</button>
+                <button id="btnSiguienteGuia" onclick="siguientePasoGuia()" style="background: #2563eb; color: white; border: none; padding: 0.6rem 1.5rem; border-radius: 8px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);">Siguiente</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SCRIPT DE LA GUÍA -->
+<script>
+    const pasosGuia = [
+        {
+            titulo: "¡Bienvenido a UTP +Lab! 👋",
+            texto: "Estamos felices de tenerte aquí. Esta pequeña guía te mostrará cómo reservar tu primer laboratorio en menos de 1 minuto.",
+            icono: "🎓"
+        },
+        {
+            titulo: "1. Elige tu Laboratorio 🔬",
+            texto: "En esta pantalla encontrarás los cubículos disponibles (Química, Física, Mecatrónica). Fíjate en los que tienen el punto verde, ¡esos están libres!",
+            icono: "🔭"
+        },
+        {
+            titulo: "2. Revisa los Materiales 📦",
+            texto: "Al elegir un laboratorio, verás los equipos y EPPs (como batas y gafas) que necesitas. ¡Asegúrate de revisar el stock antes de reservar!",
+            icono: "🧪"
+        },
+        {
+            titulo: "3. ¡Reserva y Listo! ✅",
+            texto: "Elige la fecha y hora (máximo 2 horas). Una vez confirmada, acércate al laboratorio en el horario indicado para que el Encargado valide tu Check-in.",
+            icono: "🚀"
+        }
+    ];
+
+    let pasoActualGuia = 0;
+
+    // Verificamos si el alumno ya vio la guía al cargar la página
+    document.addEventListener("DOMContentLoaded", () => {
+        // Usamos localStorage para recordar si ya la vio
+        const yaVioGuia = localStorage.getItem('utp_guia_alumno_vista');
+        
+        // Si es un alumno nuevo (o borró caché), mostramos la guía
+        if (!yaVioGuia) {
+            // Pequeño delay para que la página cargue primero
+            setTimeout(() => {
+                document.getElementById('modalGuiaInteractiva').style.display = 'flex';
+                renderizarPasoGuia();
+            }, 800); 
+        }
+    });
+
+    function renderizarPasoGuia() {
+        const paso = pasosGuia[pasoActualGuia];
+        
+        // Animación simple de fade-in
+        const contenedor = document.getElementById('contenidoGuia');
+        contenedor.style.opacity = '0';
+        
+        setTimeout(() => {
+            contenedor.innerHTML = `
+                <div style="font-size: 4rem; margin-bottom: 1rem; animation: bounce 1s;">${paso.icono}</div>
+                <h2 style="color: #0f172a; font-size: 1.4rem; font-weight: 800; margin-bottom: 0.5rem;">${paso.titulo}</h2>
+                <p style="color: #64748b; font-size: 0.95rem; line-height: 1.6; margin: 0;">${paso.texto}</p>
+            `;
+            contenedor.style.transition = 'opacity 0.3s ease';
+            contenedor.style.opacity = '1';
+        }, 100);
+
+        // Actualizamos la barra de progreso
+        const progreso = ((pasoActualGuia + 1) / pasosGuia.length) * 100;
+        document.getElementById('barraProgresoGuia').style.width = progreso + '%';
+
+        // Lógica de los botones
+        const btnAtras = document.getElementById('btnAtrasGuia');
+        const btnSiguiente = document.getElementById('btnSiguienteGuia');
+
+        btnAtras.style.display = pasoActualGuia === 0 ? 'none' : 'block';
+
+        if (pasoActualGuia === pasosGuia.length - 1) {
+            btnSiguiente.innerText = "¡Empezar!";
+            btnSiguiente.style.background = "#10b981"; // Verde
+        } else {
+            btnSiguiente.innerText = "Siguiente";
+            btnSiguiente.style.background = "#2563eb"; // Azul
+        }
+    }
+
+    function siguientePasoGuia() {
+        if (pasoActualGuia < pasosGuia.length - 1) {
+            pasoActualGuia++;
+            renderizarPasoGuia();
+        } else {
+            cerrarGuia(true); // Si es el último paso, cerramos
+        }
+    }
+
+    function pasoAnteriorGuia() {
+        if (pasoActualGuia > 0) {
+            pasoActualGuia--;
+            renderizarPasoGuia();
+        }
+    }
+
+    function cerrarGuia(guardarEstado) {
+        const modal = document.getElementById('modalGuiaInteractiva');
+        modal.style.display = 'none';
+        
+        // Si el usuario terminó la guía o le dio a "Omitir", guardamos que ya la vio
+        if (guardarEstado) {
+            localStorage.setItem('utp_guia_alumno_vista', 'true');
+        }
+    }
+</script>
+
+<!-- Pequeño CSS para la animación del icono -->
+<style>
+    @keyframes bounce {
+        0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+        40% { transform: translateY(-15px); }
+        60% { transform: translateY(-7px); }
+    }
+</style>
+
     <!-- Scripts globales (lucide, etc.) -->
     <div th:replace="~{fragments/scripts}"></div>
 
