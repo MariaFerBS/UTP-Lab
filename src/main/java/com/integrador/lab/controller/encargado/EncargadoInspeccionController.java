@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.integrador.lab.modelo.Alumno;
+import com.integrador.lab.modelo.Encargado;
 import com.integrador.lab.modelo.Laboratorio;
 import com.integrador.lab.modelo.Producto;
 import com.integrador.lab.modelo.Reserva;
@@ -200,7 +201,8 @@ public class EncargadoInspeccionController {
     @Transactional
     public ResponseEntity<?> finalizarInspeccion(
             @PathVariable("idReserva") String idReserva,
-            @RequestBody FinalizarInspeccionRequest req) {
+            @RequestBody FinalizarInspeccionRequest req,
+            HttpSession sesion) {
 
         Optional<Reserva> resOpt = reservaRepositorio.findById(idReserva);
         if (resOpt.isEmpty()) {
@@ -208,6 +210,12 @@ public class EncargadoInspeccionController {
         }
 
         Reserva r = resOpt.get();
+
+         Object userSession = sesion.getAttribute("usuarioLogueado");
+    if (userSession instanceof Encargado) {
+        r.setEncargadoInspeccion((Encargado) userSession);
+    }
+    r.setFechaHoraInspeccion(java.time.LocalDateTime.now());
         List<ReservaIntegrante> integrantes = reservaIntegranteRepositorio.findByReserva_IdReserva(idReserva);
         boolean huboDanios = (req.getDanados() != null && !req.getDanados().isEmpty());
 

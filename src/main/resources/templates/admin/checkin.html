@@ -81,17 +81,30 @@
             <div class="accion-derecha-checkin">
               <span class="codigo-reserva-checkin" th:text="${r.idReserva}">R-001</span>
               
-              <!-- El Admin SOLO VE ESTADO, NO TIENE BOTÓN DE ACCIÓN -->
-              <div th:if="${r.estado == 'CONFIRMADA'}" style="font-size: 13px; color: #64748b; font-weight: 600; text-align: right;">
-                <i data-lucide="clock" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle;"></i> 
-                Esperando validación
+              <!-- NUEVA INFO: Quién hizo el check-in y a qué hora -->
+              <div th:if="${r.nombreEncargado != null}" style="text-align: right; margin-bottom: 5px;">
+                  <div style="font-size: 12px; color: #10b981; font-weight: 700;">
+                      <i data-lucide="check-circle" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle;"></i> 
+                      Check-in por: <span th:text="${r.nombreEncargado}">Carlos Mendoza</span>
+                  </div>
+                  <div style="font-size: 11px; color: #64748b;" th:text="'A las ' + ${r.horaAccion}">A las 07:05</div>
               </div>
-              
-              <div th:if="${r.estado == 'EN_USO' or r.estado == 'DEVUELTA' or r.estado == 'INSPECCIONADA' or r.estado == 'CON_INCIDENCIA' or r.estado == 'NO_ASISTIO'}" 
-                   style="font-size: 13px; color: #10b981; font-weight: 600; text-align: right;">
-                <i data-lucide="check-circle" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle;"></i> 
-                Validado por Encargado
+
+              <!-- Si aún no se hace el check-in -->
+              <div th:if="${r.estado == 'CONFIRMADA' or r.estado == 'PENDIENTE'}" style="font-size: 13px; color: #64748b; font-weight: 600; text-align: right; margin-bottom: 5px;">
+                  <i data-lucide="clock" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle;"></i> 
+                  Esperando validación
               </div>
+
+              <!-- Botón Ver Resumen (se muestra si ya pasó de estado CONFIRMADA) -->
+              <button th:if="${r.estado != 'CONFIRMADA' and r.estado != 'PENDIENTE'}"
+                      type="button" 
+                      class="btn-verde-iniciar" 
+                      style="background-color: #f1f5f9; color: #475569; border: 1px solid #e2e8f0;"
+                      th:data-id="${r.idReserva}"
+                      onclick="abrirResumenCheckin(this.getAttribute('data-id'))">
+                <i data-lucide="file-text"></i> Ver Resumen
+              </button>
             </div>
 
           </div>
@@ -110,5 +123,6 @@
   </div>
 
   <div th:replace="~{fragments/scripts}"></div>    
+  <script th:src="@{/js/admin-checkin.js}"></script>
 </body>
 </html>

@@ -1,6 +1,7 @@
 package com.integrador.lab.modelo;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -38,6 +39,22 @@ public class Reserva {
     @Column(length = 20)
     private String estado;
 
+    // 👇 NUEVOS CAMPOS PARA EL ENCARGADO Y FECHAS 👇
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_encargado_checkin")
+    private Encargado encargadoCheckin;
+
+    @Column(name = "fecha_hora_checkin")
+    private LocalDateTime fechaHoraCheckin;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_encargado_inspeccion")
+    private Encargado encargadoInspeccion;
+
+    @Column(name = "fecha_hora_inspeccion")
+    private LocalDateTime fechaHoraInspeccion;
+    // 👆 FIN NUEVOS CAMPOS 👆
+
     @OneToMany(mappedBy = "reserva", cascade = CascadeType.ALL)
     private List<ReservaIntegrante> integrantes;
 
@@ -55,6 +72,8 @@ public class Reserva {
         this.horaFin = horaFin;
         this.estado = estado;
     }
+
+    // --- GETTERS Y SETTERS ---
 
     public String getIdReserva() {
         return idReserva;
@@ -119,5 +138,38 @@ public class Reserva {
     public void setItems(List<ReservaItem> items) {
         this.items = items;
     }
-}
 
+    // 👇 GETTERS Y SETTERS DE LOS NUEVOS CAMPOS 👇
+
+    public Encargado getEncargadoCheckin() {
+        return encargadoCheckin;
+    }
+
+    public void setEncargadoCheckin(Encargado encargadoCheckin) {
+        this.encargadoCheckin = encargadoCheckin;
+    }
+
+    public LocalDateTime getFechaHoraCheckin() {
+        return fechaHoraCheckin;
+    }
+
+    public void setFechaHoraCheckin(LocalDateTime fechaHoraCheckin) {
+        this.fechaHoraCheckin = fechaHoraCheckin;
+    }
+
+    public Encargado getEncargadoInspeccion() {
+        return encargadoInspeccion;
+    }
+
+    public void setEncargadoInspeccion(Encargado encargadoInspeccion) {
+        this.encargadoInspeccion = encargadoInspeccion;
+    }
+
+    public LocalDateTime getFechaHoraInspeccion() {
+        return fechaHoraInspeccion;
+    }
+
+    public void setFechaHoraInspeccion(LocalDateTime fechaHoraInspeccion) {
+        this.fechaHoraInspeccion = fechaHoraInspeccion;
+    }
+}

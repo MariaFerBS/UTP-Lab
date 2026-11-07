@@ -70,14 +70,31 @@
             <div class="accion-derecha-checkin">
               <span class="codigo-reserva-checkin" th:text="${ins.idReserva}">R-001</span>
               
-              <!-- El Admin SOLO VE EL ESTADO -->
-              <div style="font-size: 13px; color: #64748b; font-weight: 600; text-align: right;">
-                  <i data-lucide="clipboard-check" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle;"></i> 
-                  <span th:if="${ins.estado == 'EN_USO'}">En laboratorio</span>
-                  <span th:if="${ins.estado == 'DEVUELTA'}">Pendiente de inspección</span>
-                  <span th:if="${ins.estado == 'INSPECCIONADA'}">Materiales conformes</span>
-                  <span th:if="${ins.estado == 'CON_INCIDENCIA'}">Revisar incidencias</span>
+              <!-- NUEVA INFO: Quién hizo la inspección y a qué hora -->
+              <div th:if="${ins.nombreEncargado != null}" style="text-align: right; margin-bottom: 5px;">
+                  <div style="font-size: 12px; color: #10b981; font-weight: 700;">
+                      <i data-lucide="check-circle" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle;"></i> 
+                      Inspección por: <span th:text="${ins.nombreEncargado}">Carlos Mendoza</span>
+                  </div>
+                  <div style="font-size: 11px; color: #64748b;" th:text="'A las ' + ${ins.horaAccion}">A las 09:10</div>
               </div>
+
+              <!-- Si aún no se inspecciona -->
+              <div th:if="${ins.estado != 'INSPECCIONADA' and ins.estado != 'CON_INCIDENCIA'}" style="font-size: 13px; color: #64748b; font-weight: 600; text-align: right; margin-bottom: 5px;">
+                  <i data-lucide="clock" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle;"></i> 
+                  <span th:if="${ins.estado == 'EN_USO'}">En laboratorio (Pendiente salida)</span>
+                  <span th:if="${ins.estado == 'DEVUELTA'}">Pendiente de inspección</span>
+              </div>
+
+              <!-- Botón Ver Resumen (solo si ya fue inspeccionada) -->
+              <button th:if="${ins.estado == 'INSPECCIONADA' or ins.estado == 'CON_INCIDENCIA'}"
+                      type="button" 
+                      class="btn-verde-iniciar" 
+                      style="background-color: #f1f5f9; color: #475569; border: 1px solid #e2e8f0;"
+                      th:data-id="${ins.idReserva}"
+                      onclick="abrirResumenInspeccion(this.getAttribute('data-id'))">
+                <i data-lucide="file-text"></i> Ver Resumen
+              </button>
             </div>
 
           </div>
@@ -96,5 +113,6 @@
   </div>
 
   <div th:replace="~{fragments/scripts}"></div>
+  <script th:src="@{/js/admin-inspeccion.js}"></script>
 </body>
 </html>

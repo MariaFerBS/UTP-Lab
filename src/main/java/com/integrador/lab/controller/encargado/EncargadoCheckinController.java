@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.integrador.lab.modelo.Encargado;
 import com.integrador.lab.modelo.Producto;
 import com.integrador.lab.modelo.Reserva;
 import com.integrador.lab.modelo.ReservaIntegrante;
@@ -185,7 +186,7 @@ public class EncargadoCheckinController {
     @PostMapping("/confirmar/{idReserva}")
     @ResponseBody
     @Transactional
-    public ResponseEntity<?> confirmarCheckin(@PathVariable("idReserva") String idReserva) {
+    public ResponseEntity<?> confirmarCheckin(@PathVariable("idReserva") String idReserva, HttpSession sesion) {
         Optional<Reserva> resOpt = reservaRepositorio.findById(idReserva);
         if (resOpt.isEmpty()) {
             return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Reserva no encontrada"));
@@ -193,6 +194,11 @@ public class EncargadoCheckinController {
 
         Reserva r = resOpt.get();
         r.setEstado("EN_USO");
+        Object userSession = sesion.getAttribute("usuarioLogueado");
+    if (userSession instanceof Encargado) {
+        r.setEncargadoCheckin((Encargado) userSession);
+    }
+    r.setFechaHoraCheckin(java.time.LocalDateTime.now());
         reservaRepositorio.save(r);
 
         List<ReservaIntegrante> integrantes = reservaIntegranteRepositorio.findByReserva_IdReserva(idReserva);
