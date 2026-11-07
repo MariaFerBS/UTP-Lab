@@ -17,9 +17,10 @@
 <th:block th:if="${#strings.contains(requestURI, 'alumno')}">
     <link rel="stylesheet" th:href="@{/css/alumno.css}" />
 </th:block>
-<th:block th:if="${#strings.contains(requestURI, 'admin')}">
+<th:block th:if="${#strings.contains(requestURI, 'admin') or #strings.contains(requestURI, 'encargado')}">
     <link rel="stylesheet" th:href="@{/css/admin.css}" />
 </th:block>
+
 <th:block th:if="${#strings.contains(requestURI, 'login') or #strings.contains(requestURI, 'recuperar') or #strings.contains(requestURI, 'cambiar-password')}">
     <link rel="stylesheet" th:href="@{/css/login.css}" />
 </th:block>
