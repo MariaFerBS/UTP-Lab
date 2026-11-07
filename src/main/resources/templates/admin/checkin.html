@@ -1,135 +1,6 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>UTP +Lab - Check-in Presencial</title>
-  
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <script src="https://unpkg.com/lucide@latest"></script>
-
-  <!-- CSS GLOBAL -->
-  <link rel="stylesheet" th:href="@{/css/base.css}" />
-  <link rel="stylesheet" th:href="@{/css/admin.css}" />
-  <link rel="stylesheet" th:href="@{/css/modales.css}" />
-
-  <!-- 🚨 ESTILOS FORZADOS PARA EL MODAL DE CHECK-IN 🚨 -->
-  <style>
-      .check-oculto { display: none !important; }
-      .tarjeta-check-item {
-          display: flex !important;
-          align-items: center !important;
-          gap: 12px !important;
-          padding: 12px 16px !important;
-          background-color: #f8fafc !important;
-          border: 1.5px solid #e2e8f0 !important;
-          border-radius: 10px !important;
-          margin-bottom: 8px !important;
-          cursor: pointer !important;
-          width: 100% !important;
-          box-sizing: border-box !important;
-      }
-      .tarjeta-check-item.marcado {
-          border-color: #10b981 !important;
-          background-color: #ffffff !important;
-      }
-      .caja-checkbox-cuadro {
-          width: 18px !important;
-          height: 18px !important;
-          min-width: 18px !important;
-          border: 2px solid #94a3b8 !important;
-          border-radius: 4px !important;
-          background: #ffffff !important;
-          flex-shrink: 0 !important;
-          position: relative !important;
-      }
-      .tarjeta-check-item.marcado .caja-checkbox-cuadro {
-          background-color: #10b981 !important;
-          border-color: #10b981 !important;
-      }
-      .tarjeta-check-item.marcado .caja-checkbox-cuadro::after {
-          content: '✓' !important;
-          color: white !important;
-          font-size: 12px !important;
-          position: absolute !important;
-          top: 50% !important; left: 50% !important;
-          transform: translate(-50%, -50%) !important;
-      }
-      .info-texto-verif {
-          display: flex !important;
-          flex-direction: column !important;
-          flex: 1 !important;
-          gap: 2px !important;
-      }
-      .nombre-persona-verif, .nombre-item-verif {
-          font-size: 14px !important;
-          font-weight: 600 !important;
-          color: #0f172a !important;
-          margin: 0 !important;
-      }
-      .sub-codigo-verif, .sub-unidad-verif {
-          font-size: 12px !important;
-          color: #64748b !important;
-          margin: 0 !important;
-      }
-      .avatar-circulo-verif {
-          width: 32px !important;
-          height: 32px !important;
-          min-width: 32px !important;
-          background-color: #0f172a !important;
-          color: #fff !important;
-          border-radius: 50% !important;
-          display: flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          font-size: 11px !important;
-          font-weight: 800 !important;
-          flex-shrink: 0 !important;
-      }
-      .emoji-epp-icon {
-          font-size: 20px !important;
-          flex-shrink: 0 !important;
-          width: 32px !important;
-          text-align: center !important;
-      }
-      .cuerpo-modal-checkin {
-          padding: 20px !important;
-          max-height: 60vh !important;
-          overflow-y: auto !important;
-          display: flex !important;
-          flex-direction: column !important;
-          gap: 16px !important;
-      }
-      .subtitulo-seccion-modal {
-          font-size: 12px !important;
-          font-weight: 800 !important;
-          color: #475569 !important;
-          margin-bottom: 8px !important;
-          display: block !important;
-          text-transform: uppercase !important;
-      }
-      .pie-modal-checkin {
-          border-top: 1px solid #f1f5f9 !important;
-          padding: 16px 20px !important;
-          display: flex !important;
-          justify-content: space-between !important;
-          align-items: center !important;
-          background-color: #ffffff !important;
-      }
-      .btn-confirmar-checkin-verde {
-          background-color: #0d9488 !important;
-          color: #ffffff !important;
-          border: none !important;
-          border-radius: 10px !important;
-          padding: 10px 20px !important;
-          font-size: 14px !important;
-          font-weight: 700 !important;
-          cursor: pointer !important;
-      }
-  </style>
-</head>
+<head th:replace="~{fragments/head :: head('UTP +Lab - Check-in (Admin)')}"></head>
 <body>
   <div class="contenedor-app">
     
@@ -142,8 +13,8 @@
         
         <div class="fila-dashboard-header" style="margin-bottom: 1rem;">
             <div>
-                <h1 class="titulo-seccion-catalogo">Check-in Presencial</h1>
-                <p class="subtitulo-seccion-catalogo">Validación de identidad y entrega de insumos</p>
+                <h1 class="titulo-seccion-catalogo">Supervisión de Check-in</h1>
+                <p class="subtitulo-seccion-catalogo">Visualización del estado de asistencia (Acción exclusiva del Encargado)</p>
             </div>
             
             <div class="selector-fecha-dashboard">
@@ -160,7 +31,7 @@
             </div>
         </div>
 
-        <!-- 1. LISTADO DE RESERVAS POR VALIDAR -->
+        <!-- LISTADO DE RESERVAS -->
         <div id="contenedorListaCheckin" 
              class="lista-tarjetas-checkin" 
              th:style="${#lists.isEmpty(reservas)} ? 'display:none;' : 'display:flex;'">
@@ -178,23 +49,22 @@
               <div class="fila-nombre-estado">
                 <strong class="nombre-lab-checkin" th:text="${r.laboratorio}">Lab. Química</strong>
                 <span class="badge-estado-pill" 
-      th:classappend="${r.estado == 'CONFIRMADA' ? 'estado-confirmada' : 
-                      (r.estado == 'EN_USO' ? 'estado-en-uso' : 
-                      (r.estado == 'DEVUELTA' ? 'estado-devuelta' : 
-                      (r.estado == 'INSPECCIONADA' ? 'estado-inspeccionada' : 
-                      (r.estado == 'CON_INCIDENCIA' ? 'estado-incidencia' : 
-                      (r.estado == 'NO_ASISTIO' ? 'estado-no-asistio' : 
-                      (r.estado == 'NO_INSPECCIONADO' ? 'estado-no-inspeccionado' : 'estado-pendiente'))))))}"
-      th:text="${r.estado == 'CONFIRMADA' ? 'Confirmada' : 
-               (r.estado == 'EN_USO' ? 'EN USO' : 
-               (r.estado == 'DEVUELTA' ? 'Devuelta' : 
-               (r.estado == 'INSPECCIONADA' ? 'Inspeccionada' : 
-               (r.estado == 'CON_INCIDENCIA' ? 'Con Incidencia' : 
-               (r.estado == 'NO_ASISTIO' ? 'No Asistió' : 
-               (r.estado == 'NO_INSPECCIONADO' ? 'No Inspeccionado' : 'Pendiente'))))))}">
-  Confirmada
-</span>
-</span>
+                      th:classappend="${r.estado == 'CONFIRMADA' ? 'estado-confirmada' : 
+                                      (r.estado == 'EN_USO' ? 'estado-en-uso' : 
+                                      (r.estado == 'DEVUELTA' ? 'estado-devuelta' : 
+                                      (r.estado == 'INSPECCIONADA' ? 'estado-inspeccionada' : 
+                                      (r.estado == 'CON_INCIDENCIA' ? 'estado-incidencia' : 
+                                      (r.estado == 'NO_ASISTIO' ? 'estado-no-asistio' : 
+                                      (r.estado == 'NO_INSPECCIONADO' ? 'estado-no-inspeccionado' : 'estado-pendiente'))))))}"
+                      th:text="${r.estado == 'CONFIRMADA' ? 'Pendiente de Check-in' : 
+                               (r.estado == 'EN_USO' ? 'Check-in Realizado' : 
+                               (r.estado == 'DEVUELTA' ? 'Devuelta' : 
+                               (r.estado == 'INSPECCIONADA' ? 'Inspeccionada' : 
+                               (r.estado == 'CON_INCIDENCIA' ? 'Con Incidencia' : 
+                               (r.estado == 'NO_ASISTIO' ? 'No Asistió' : 
+                               (r.estado == 'NO_INSPECCIONADO' ? 'No Inspeccionado' : 'Pendiente'))))))}">
+                  Estado
+                </span>
               </div>
               
               <div class="metadatos-horario-checkin">
@@ -208,28 +78,21 @@
               </div>
             </div>
 
-           <div class="accion-derecha-checkin">
-  <span class="codigo-reserva-checkin" th:text="${r.idReserva}">R-001</span>
-  
-  <!-- CASO 1: Estados ya procesados -> "Ver Resumen" -->
-  <button th:if="${r.estado == 'EN_USO' or r.estado == 'DEVUELTA' or r.estado == 'INSPECCIONADA' or r.estado == 'CON_INCIDENCIA' or r.estado == 'NO_ASISTIO' or r.estado == 'NO_INSPECCIONADO'}"
-          type="button" 
-          class="btn-verde-iniciar" 
-          style="background-color: #f1f5f9; color: #475569; border: 1px solid #e2e8f0;"
-          th:data-id="${r.idReserva}"
-          onclick="abrirResumenCheckin(this.getAttribute('data-id'))">
-    <i data-lucide="file-text"></i> Ver Resumen
-  </button>
-
-  <!-- CASO 2: Estados pendientes -> "Iniciar" -->
-  <button th:if="${r.estado == 'CONFIRMADA' or r.estado == 'PENDIENTE'}"
-          type="button" 
-          class="btn-verde-iniciar" 
-          th:data-id="${r.idReserva}"
-          onclick="abrirModalCheckin(this.getAttribute('data-id'))">
-    <i data-lucide="check-square"></i> Iniciar
-  </button>
-</div>
+            <div class="accion-derecha-checkin">
+              <span class="codigo-reserva-checkin" th:text="${r.idReserva}">R-001</span>
+              
+              <!-- El Admin SOLO VE ESTADO, NO TIENE BOTÓN DE ACCIÓN -->
+              <div th:if="${r.estado == 'CONFIRMADA'}" style="font-size: 13px; color: #64748b; font-weight: 600; text-align: right;">
+                <i data-lucide="clock" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle;"></i> 
+                Esperando validación
+              </div>
+              
+              <div th:if="${r.estado == 'EN_USO' or r.estado == 'DEVUELTA' or r.estado == 'INSPECCIONADA' or r.estado == 'CON_INCIDENCIA' or r.estado == 'NO_ASISTIO'}" 
+                   style="font-size: 13px; color: #10b981; font-weight: 600; text-align: right;">
+                <i data-lucide="check-circle" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle;"></i> 
+                Validado por Encargado
+              </div>
+            </div>
 
           </div>
         </div>
@@ -239,56 +102,13 @@
              class="tarjeta-sin-checkins-vacia" 
              th:style="${#lists.isEmpty(reservas)} ? 'display:flex;' : 'display:none;'">
           <span class="icono-fiesta-confeti">🎉</span>
-          <strong>Sin check-ins pendientes</strong>
+          <strong>Sin reservas registradas para esta fecha</strong>
         </div>
 
       </section>
     </main>
-
-    <!-- MODAL DE CHECK-IN PRESENCIAL -->
-    <div id="modalCheckin" class="fondo-modal-oscuro" style="display: none;">
-      <div class="tarjeta-modal modal-checkin-ancho">
-        
-        <div class="cabecera-modal-checkin">
-          <div>
-            <h3 id="modalLabTitulo">Lab. Química</h3>
-            <p id="modalLabSubtitulo">R-001 · 09:00–11:00</p>
-          </div>
-          <button type="button" class="btn-cerrar-blanco" onclick="cerrarModalCheckin()">✕</button>
-        </div>
-
-        <div class="cuerpo-modal-checkin">
-          
-          <div class="bloque-verif-seccion">
-            <span class="subtitulo-seccion-modal">1. VERIFICAR IDENTIDAD</span>
-            <div class="lista-verif-items" id="listaCheckIntegrantes"></div>
-          </div>
-
-          <div class="bloque-verif-seccion">
-            <span class="subtitulo-seccion-modal">2. ENTREGAR INSUMOS</span>
-            <div class="lista-verif-items" id="listaCheckInsumos"></div>
-          </div>
-
-          <div class="bloque-verif-seccion">
-            <span class="subtitulo-seccion-modal">3. ENTREGAR EPPS</span>
-            <div class="lista-verif-items" id="listaCheckEpps"></div>
-          </div>
-
-        </div>
-
-        <div class="pie-modal-checkin">
-          <span class="contador-verificados-txt" id="txtContadorVerificados">0/0 verificados</span>
-          <button type="button" class="btn-confirmar-checkin-verde" id="btnConfirmarCheckin" onclick="enviarConfirmacionCheckin()">
-            Confirmar check-in →
-          </button>
-        </div>
-
-      </div>
-    </div>
-
   </div>
 
   <div th:replace="~{fragments/scripts}"></div>    
-  <script th:src="@{/js/admin-checkin.js}"></script>
 </body>
 </html>
