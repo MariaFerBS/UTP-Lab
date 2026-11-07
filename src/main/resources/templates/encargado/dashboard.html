@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/head :: head('Dashboard - Encargado')}">
-    <!-- CSS GLOBAL -->
-  <link rel="stylesheet" th:href="@{/css/base.css}" />
-  <link rel="stylesheet" th:href="@{/css/admin.css}" />
-  <link rel="stylesheet" th:href="@{/css/modales.css}" />
+  <link rel="stylesheet" th:href="@{/css/base.css}">
+  <link rel="stylesheet" th:href="@{/css/admin.css}">
+  <link rel="stylesheet" th:href="@{/css/modales.css}">
+  <link rel="stylesheet" th:href="@{/css/responsive.css}">
 </head>
 <body>
   <div class="contenedor-app">
@@ -212,7 +212,14 @@
     </main>
   </div>
 
+  <!-- SCRIPTS GLOBALES -->
   <div th:replace="~{fragments/scripts}"></div>
-  <script th:src="@{/js/encargado-dashboard.js}"></script>
+  
+  <!-- Usar admin-dashboard.js o topbar.js que sí existen en tu carpeta JS -->
+  <script th:src="@{/js/topbar.js}"></script>
+  
+  <!-- SCRIPTS DEL TOPBAR -->
+  <div th:replace="~{fragments/topbar-encargado :: scripts}"></div>
+</body>
 </body>
 </html>
