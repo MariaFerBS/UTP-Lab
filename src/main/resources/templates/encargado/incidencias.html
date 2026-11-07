@@ -52,6 +52,20 @@
         </div>
 
         <!-- ======================================================= -->
+        <!-- BARRA DE BÚSQUEDA GLOBAL                                -->
+        <!-- ======================================================= -->
+        <div style="margin-bottom: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 300px; position: relative;">
+                <i data-lucide="search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; width: 18px;"></i>
+                <input type="text" 
+                       id="inputBuscarIncidencia" 
+                       onkeyup="filtrarIncidencias()" 
+                       placeholder="Buscar por estudiante, correo, laboratorio o código de incidencia..." 
+                       style="width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; border-radius: 10px; border: 1px solid #cbd5e1; outline: none; font-size: 0.9rem; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+            </div>
+        </div>
+
+        <!-- ======================================================= -->
         <!-- SECCIÓN 1: TODAS LAS INCIDENCIAS ACTIVAS (GLOBALES)     -->
         <!-- ======================================================= -->
         <div style="margin-bottom: 2.5rem;">
@@ -64,7 +78,7 @@
 
           <div class="lista-tarjetas-incidencias-col" th:unless="${#lists.isEmpty(incidenciasActivas)}">
             <div th:each="inc : ${incidenciasActivas}" 
-                 class="tarjeta-incidencia-completa" 
+                 class="tarjeta-incidencia-completa tarjeta-incidencia-filtro" 
                  th:id="'card-inc-' + ${inc.idSancion}">
               
               <div class="cuerpo-superior-inc">
@@ -87,7 +101,7 @@
                 </div>
 
                 <div class="accion-derecha-inc">
-                  <span class="cod-inc-gris" th:text="${inc.idSancion}">RES005</span>
+                  <span class="cod-inc-gris dato-codigo" th:text="${inc.idSancion}">RES005</span>
                   
                   <!-- Botón Resolver (si ya está notificada) -->
                   <button th:if="${inc.notificada}" 
@@ -115,11 +129,11 @@
               <div class="metadatos-grid-inc">
                 <div class="col-meta-inc">
                   <span class="label-meta-dim">Lab</span>
-                  <strong class="val-meta-txt" th:text="${inc.laboratorio}">Lab. Química</strong>
+                  <strong class="val-meta-txt dato-lab" th:text="${inc.laboratorio}">Lab. Química</strong>
                 </div>
                 <div class="col-meta-inc">
                   <span class="label-meta-dim">Estudiantes</span>
-                  <strong class="val-meta-txt" th:text="${inc.estudiante}">Felipe, Miguel</strong>
+                  <strong class="val-meta-txt dato-estudiante" th:text="${inc.estudiante}">Felipe, Miguel</strong>
                 </div>
                 <div class="col-meta-inc">
                   <span class="label-meta-dim">Correos</span>
@@ -152,7 +166,7 @@
               <p style="font-size: 0.85rem; color: #64748b; margin: 0.2rem 0 0 0;">Consulta las incidencias que ya fueron pagadas o resueltas por fecha.</p>
             </div>
             
-            <!-- SELECTOR DE FECHA (Ahora está aquí abajo) -->
+            <!-- SELECTOR DE FECHA -->
             <div class="selector-fecha-dashboard">
                 <a th:href="@{/encargado/incidencias(fecha=${fechaAnterior})}" class="btn-fecha-nav" title="Día anterior">
                     <i data-lucide="chevron-left"></i>
@@ -174,7 +188,7 @@
 
           <div class="lista-tarjetas-incidencias-col" th:unless="${#lists.isEmpty(incidenciasHistorial)}">
             <div th:each="inc : ${incidenciasHistorial}" 
-                 class="tarjeta-incidencia-completa" 
+                 class="tarjeta-incidencia-completa tarjeta-incidencia-filtro" 
                  th:id="'card-hist-' + ${inc.idSancion}">
               
               <div class="cuerpo-superior-inc">
@@ -195,7 +209,7 @@
                 </div>
 
                 <div class="accion-derecha-inc">
-                  <span class="cod-inc-gris" th:text="${inc.idSancion}">RES005</span>
+                  <span class="cod-inc-gris dato-codigo" th:text="${inc.idSancion}">RES005</span>
                   
                   <button type="button" 
                           class="btn-verde-iniciar" 
@@ -210,11 +224,11 @@
               <div class="metadatos-grid-inc">
                 <div class="col-meta-inc">
                   <span class="label-meta-dim">Lab</span>
-                  <strong class="val-meta-txt" th:text="${inc.laboratorio}">Lab. Química</strong>
+                  <strong class="val-meta-txt dato-lab" th:text="${inc.laboratorio}">Lab. Química</strong>
                 </div>
                 <div class="col-meta-inc">
                   <span class="label-meta-dim">Estudiantes</span>
-                  <strong class="val-meta-txt" th:text="${inc.estudiante}">Felipe, Miguel</strong>
+                  <strong class="val-meta-txt dato-estudiante" th:text="${inc.estudiante}">Felipe, Miguel</strong>
                 </div>
                 <div class="col-meta-inc">
                   <span class="label-meta-dim">Correos</span>
@@ -264,5 +278,32 @@
   
   <!-- JS específico de Incidencias -->
   <script th:src="@{/js/admin-incidencias.js}"></script>
+
+  <!-- SCRIPT PARA FILTRAR INCIDENCIAS -->
+  <script>
+    function filtrarIncidencias() {
+        // Obtenemos el texto que el usuario escribió en minúsculas
+        const textoBusqueda = document.getElementById('inputBuscarIncidencia').value.toLowerCase();
+        
+        // Obtenemos todas las tarjetas de incidencia (tanto activas como del historial)
+        const tarjetas = document.querySelectorAll('.tarjeta-incidencia-filtro');
+
+        tarjetas.forEach(tarjeta => {
+            // Extraemos el texto de los datos clave
+            const estudiante = tarjeta.querySelector('.dato-estudiante')?.innerText.toLowerCase() || "";
+            const laboratorio = tarjeta.querySelector('.dato-lab')?.innerText.toLowerCase() || "";
+            const codigo = tarjeta.querySelector('.dato-codigo')?.innerText.toLowerCase() || "";
+            // También buscamos en el correo por si el usuario escribe el código del alumno
+            const correo = tarjeta.querySelector('.col-meta-inc:nth-child(3) .val-meta-txt')?.innerText.toLowerCase() || "";
+
+            // Verificamos si el texto de búsqueda coincide con algún campo
+            if (estudiante.includes(textoBusqueda) || laboratorio.includes(textoBusqueda) || codigo.includes(textoBusqueda) || correo.includes(textoBusqueda)) {
+                tarjeta.style.display = ''; // Lo mostramos
+            } else {
+                tarjeta.style.display = 'none'; // Lo ocultamos
+            }
+        });
+    }
+  </script>
 </body>
 </html>

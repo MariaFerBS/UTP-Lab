@@ -3,15 +3,19 @@
 // =====================================================================
 
 function abrirResumenCheckin(idReserva) {
-    // Hacemos la petición al endpoint del admin para traer los datos
     fetch(`/admin/checkin/api/${idReserva}`)
-        .then(res => {
-            if (!res.ok) throw new Error("Error al cargar datos");
-            return res.json();
-        })
+        .then(res => res.json())
         .then(data => {
             let resumenHtml = `<strong>Laboratorio:</strong> ${data.laboratorio}<br>`;
-            resumenHtml += `<strong>Horario:</strong> ${data.horario}<br><br>`;
+            resumenHtml += `<strong>Horario:</strong> ${data.horario}<br>`;
+
+            // 👇 NUEVO: Mostramos al encargado si existe
+            if (data.nombreEncargado) {
+                resumenHtml += `<div style="margin-top: 8px; padding: 8px; background: #ecfdf5; border-radius: 6px; color: #065f46; border: 1px solid #10b981;">`;
+                resumenHtml += `<strong>✅ Check-in realizado por:</strong> ${data.nombreEncargado} <br>`;
+                resumenHtml += `<span style="font-size: 0.85rem;">A las ${data.horaAccion}</span>`;
+                resumenHtml += `</div><br>`;
+            }
             
             resumenHtml += `<strong>Integrantes:</strong><br>`;
             data.integrantes.forEach(i => { resumenHtml += `- ${i.nombre} (${i.codigo})<br>`; });
@@ -28,7 +32,6 @@ function abrirResumenCheckin(idReserva) {
                 data.epps.forEach(e => { resumenHtml += `- ${e.emoji} ${e.nombre}<br>`; });
             }
 
-            // Creamos el modal flotante con los datos
             let html = `
                 <div id="modalResumenCheckin" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 99999;">
                     <div style="background: #fff; border-radius: 16px; width: 90%; max-width: 440px; padding: 2rem; max-height: 80vh; overflow-y: auto;">

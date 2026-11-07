@@ -116,6 +116,7 @@ public class AlumnoPortalController {
             }
         }
 
+        // 👇 LÓGICA CORREGIDA DEL CONTADOR DIARIO 👇
         List<ReservaIntegrante> participaciones = reservaIntegranteRepositorio.findByAlumno_IdEstud(alumno.getIdEstud());
         LocalDate hoy = LocalDate.now();
         List<String> idsReservasHoy = new ArrayList<>();
@@ -125,7 +126,9 @@ public class AlumnoPortalController {
             if (r == null || r.getFechaReserva() == null || !hoy.equals(r.getFechaReserva())) continue;
 
             String estado = r.getEstado() == null ? "" : r.getEstado().trim().toUpperCase();
+            // Solo contamos las que no están canceladas
             if (!estado.equals("CANCELADA")) {
+                // Usamos una lista para guardar los IDs y evitar duplicados si el alumno se puso 2 veces
                 if (!idsReservasHoy.contains(r.getIdReserva())) {
                     idsReservasHoy.add(r.getIdReserva());
                 }
@@ -133,10 +136,12 @@ public class AlumnoPortalController {
         }
 
         int reservasHoy = idsReservasHoy.size();
+        int reservasRestantes = Math.max(0, 2 - reservasHoy);
 
         modelo.addAttribute("reservasHoy", reservasHoy);
-        modelo.addAttribute("reservasRestantes", Math.max(0, 2 - reservasHoy));
+        modelo.addAttribute("reservasRestantes", reservasRestantes);
         modelo.addAttribute("limiteDiarioAlcanzado", reservasHoy >= 2);
+        // 👆 FIN LÓGICA CONTADOR 👆
 
         List<ReservaActivaDto> misReservas = new ArrayList<>();
         for (ReservaIntegrante ri : participaciones) {
@@ -281,7 +286,7 @@ public class AlumnoPortalController {
         if (fecha.isBefore(LocalDate.now())) return "redirect:/alumno/laboratorios";
         if (!horaFin.isAfter(horaInicio)) return "redirect:/alumno/laboratorios";
 
-        // 1. LÍMITE DE DOS RESERVAS DIARIAS
+        // 1. LÍMITE DE DOS RESERVAS DIARIAS (Lógica corregida)
         List<ReservaIntegrante> participacionesAlumno = reservaIntegranteRepositorio.findByAlumno_IdEstud(alumnoLogueado.getIdEstud());
         List<String> idsReservasDelDia = new ArrayList<>();
 
@@ -303,9 +308,10 @@ public class AlumnoPortalController {
             return "redirect:/alumno/laboratorios";
         }
 
-        // B. Validar integrantes
+        // B. Validar integrantes (Y evitar duplicar al creador)
         if (codigosIntegrantes != null) {
             for (String codIntegrante : codigosIntegrantes) {
+                // 👇 SI EL CÓDIGO ES EL MISMO DEL ALUMNO LOGUEADO, LO IGNORAMOS 👇
                 if (codIntegrante.trim().equalsIgnoreCase(alumnoLogueado.getIdEstud().trim())) continue;
 
                 List<ReservaIntegrante> participacionesIntegrante = reservaIntegranteRepositorio.findByAlumno_IdEstud(codIntegrante.trim());
@@ -373,9 +379,10 @@ public class AlumnoPortalController {
         ReservaIntegrante responsable = new ReservaIntegrante(nuevaReserva, alumnoLogueado, false);
         reservaIntegranteRepositorio.save(responsable);
 
-        // C. Guardar Integrantes
+        // C. Guardar Integrantes (Corregido para no duplicar)
         if (codigosIntegrantes != null) {
             for (String cod : codigosIntegrantes) {
+                // 👇 ESTA ES LA CORRECCIÓN CLAVE 👇
                 if (!cod.trim().equalsIgnoreCase(alumnoLogueado.getIdEstud().trim())) {
                     Alumno integrante = alumnoRepositorio.findById(cod.trim()).orElse(null);
                     
@@ -436,7 +443,6 @@ public class AlumnoPortalController {
             String mensaje;
 
             if (montoTotal.compareTo(BigDecimal.ZERO) > 0) {
-                // CORREO CON DETALLE DE BOLETA (SI HAY PAGO)
                 asunto = "🧾 Boleta de Pago - Reserva Confirmada - UTP +Lab";
                 
                 StringBuilder detalleItems = new StringBuilder();
@@ -475,7 +481,6 @@ public class AlumnoPortalController {
                         "Gracias por tu pago. Recuerda llegar 10 minutos antes para tu check-in.\n\n" +
                         "Atentamente,\nEl equipo de UTP +Lab";
             } else {
-                // CORREO SIMPLE (RESERVA GRATUITA)
                 asunto = "✅ Confirmación de Reserva - UTP +Lab";
                 mensaje = "Hola " + alumnoLogueado.getNombre() + ",\n\n" +
                         "Tu reserva en " + lab.getNombre() + " (" + lab.getUbicacionCubiculo() + ") ha sido confirmada.\n\n" +
@@ -980,14 +985,15 @@ public class AlumnoPortalController {
 
         return notificaciones;
     }
+    
     @GetMapping("/faq")
-public String verFaq(HttpSession sesion) {
-    // Verificamos que el alumno haya iniciado sesión
-    if (sesion.getAttribute("usuarioLogueado") == null) {
-        return "redirect:/login";
+    public String verFaq(HttpSession sesion) {
+        // Verificamos que el alumno haya iniciado sesión
+        if (sesion.getAttribute("usuarioLogueado") == null) {
+            return "redirect:/login";
+        }
+        return "alumno/faq";
     }
-    return "alumno/faq";
-}
 
     // =========================================================================
     // DTOs AUXILIARES
