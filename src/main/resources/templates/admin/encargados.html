@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('UTP +Lab - Gestión de Encargados')}"></head>
+<body>
+  <div class="contenedor-app">
+    
+    <aside th:replace="~{fragments/sidebar-admin :: sidebar('encargados')}"></aside>
+
+    <main class="area-principal">
+      <header th:replace="~{fragments/topbar-admin :: topbar}"></header>
+
+      <section class="seccion-checkout">
+        
+        <!-- ENCABEZADO -->
+        <div class="fila-dashboard-header" style="margin-bottom: 1.5rem;">
+          <div>
+            <h1 class="titulo-seccion-catalogo">Gestión de Encargados</h1>
+            <p class="subtitulo-seccion-catalogo">Administra al personal que valida los check-ins e inspecciones</p>
+          </div>
+          <button type="button" class="btn-nuevo-insumo-admin" onclick="abrirModalEncargado()">
+            <i data-lucide="plus-circle"></i> Nuevo Encargado
+          </button>
+        </div>
+
+        <!-- MENSAJES DE ÉXITO / ERROR -->
+        <div th:if="${mensaje}" style="background: #dcfce7; color: #15803d; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; font-weight: 600;">
+          <i data-lucide="check-circle" style="display: inline; width: 18px;"></i> <span th:text="${mensaje}"></span>
+        </div>
+        <div th:if="${error}" style="background: #fee2e2; color: #b91c1c; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; font-weight: 600;">
+          <i data-lucide="alert-circle" style="display: inline; width: 18px;"></i> <span th:text="${error}"></span>
+        </div>
+
+        <!-- TABLA DE ENCARGADOS -->
+        <div class="card-panel-blanco tabla-card-inventario">
+          <table class="tabla-admin-inventario">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>DNI</th>
+                <th>Nombre Completo</th>
+                <th>Contraseña</th>
+                <th style="text-align: center;">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="enc : ${encargados}">
+                <td><span class="codigo-reserva-gris" th:text="${enc.idEncargado}">E45985625</span></td>
+                <td th:text="${enc.dni}">74581236</td>
+                <td><strong th:text="${enc.nombre + ' ' + enc.apellido}">Carlos Mendoza</strong></td>
+                <td>
+                  <span style="font-family: monospace; background: #f1f5f9; padding: 2px 6px; border-radius: 4px;" th:text="${enc.password}">encargado123</span>
+                </td>
+                <td style="text-align: center;">
+                  <button type="button" 
+                          class="btn-stock-mini" 
+                          style="background: #e0f2fe; color: #0369a1; border: none; padding: 5px 10px; border-radius: 6px; margin-right: 5px; cursor: pointer;"
+                          th:attr="onclick='abrirModalEditar(' + ${enc.idEncargado} + ', \'' + ${enc.dni} + '\', \'' + ${enc.nombre} + '\', \'' + ${enc.apellido} + '\')'">
+                    <i data-lucide="edit" style="width: 14px;"></i>
+                  </button>
+                  <a th:href="@{/admin/encargados/eliminar/{id}(id=${enc.idEncargado})}" 
+                     onclick="return confirm('¿Estás seguro de eliminar a este encargado?');"
+                     style="background: #fee2e2; color: #b91c1c; padding: 5px 10px; border-radius: 6px; text-decoration: none; display: inline-block;">
+                    <i data-lucide="trash-2" style="width: 14px;"></i>
+                  </a>
+                </td>
+              </tr>
+              <tr th:if="${#lists.isEmpty(encargados)}">
+                <td colspan="5" style="text-align: center; padding: 2rem; color: #94a3b8;">No hay encargados registrados.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </section>
+    </main>
+
+    <!-- MODAL PARA CREAR/EDITAR -->
+    <div id="modalEncargado" class="fondo-modal-oscuro" style="display: none;">
+      <div class="tarjeta-modal" style="max-width: 500px; width: 90%;">
+        
+        <div class="cabecera-modal-figma">
+          <div>
+            <h3 class="titulo-modal-txt" id="modalTitulo">Nuevo Encargado</h3>
+            <p class="subtitulo-modal-txt">Registra al personal de laboratorio</p>
+          </div>
+          <button type="button" class="btn-cerrar-modal-x" onclick="cerrarModalEncargado()">✕</button>
+        </div>
+
+        <form th:action="@{/admin/encargados/guardar}" method="post">
+          <div class="cuerpo-modal-formulario">
+            
+            <div class="grupo-campo-inv">
+              <label class="label-campo-inv">Código (ID):</label>
+              <input type="text" name="idEncargado" id="inputIdEncargado" class="input-estilizado" placeholder="Ej: E45985628" required />
+            </div>
+
+            <div class="grupo-campo-inv">
+              <label class="label-campo-inv">DNI:</label>
+              <input type="text" name="dni" id="inputDni" class="input-estilizado" placeholder="Ej: 74581239" required />
+            </div>
+
+            <div class="grupo-campo-inv">
+              <label class="label-campo-inv">Nombre:</label>
+              <input type="text" name="nombre" id="inputNombre" class="input-estilizado" placeholder="Ej: Carlos" required />
+            </div>
+
+            <div class="grupo-campo-inv">
+              <label class="label-campo-inv">Apellido:</label>
+              <input type="text" name="apellido" id="inputApellido" class="input-estilizado" placeholder="Ej: Mendoza" required />
+            </div>
+
+            <div class="grupo-campo-inv">
+              <label class="label-campo-inv">Contraseña:</label>
+              <input type="text" name="password" id="inputPassword" class="input-estilizado" placeholder="Dejar vacío para no cambiar (solo en edición)" />
+              <span class="ayuda-sub-campo">Obligatoria si es un nuevo registro.</span>
+            </div>
+
+          </div>
+
+          <div class="pie-modal-formulario">
+            <button type="button" class="btn-cancelar-enlace" onclick="cerrarModalEncargado()">Cancelar</button>
+            <button type="submit" class="btn-guardar-verde-teal">Guardar Encargado</button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+
+  </div>
+
+  <div th:replace="~{fragments/scripts}"></div>
+  <div th:replace="~{fragments/topbar-admin :: scripts}"></div>
+
+  <script>
+    function abrirModalEncargado() {
+      document.getElementById('modalTitulo').innerText = 'Nuevo Encargado';
+      document.getElementById('inputIdEncargado').value = '';
+      document.getElementById('inputIdEncargado').readOnly = false;
+      document.getElementById('inputDni').value = '';
+      document.getElementById('inputNombre').value = '';
+      document.getElementById('inputApellido').value = '';
+      document.getElementById('inputPassword').value = '';
+      document.getElementById('modalEncargado').style.display = 'flex';
+    }
+
+    function abrirModalEditar(id, dni, nombre, apellido) {
+      document.getElementById('modalTitulo').innerText = 'Editar Encargado';
+      document.getElementById('inputIdEncargado').value = id;
+      document.getElementById('inputIdEncargado').readOnly = true; // No permitir cambiar el ID
+      document.getElementById('inputDni').value = dni;
+      document.getElementById('inputNombre').value = nombre;
+      document.getElementById('inputApellido').value = apellido;
+      document.getElementById('inputPassword').value = '';
+      document.getElementById('modalEncargado').style.display = 'flex';
+    }
+
+    function cerrarModalEncargado() {
+      document.getElementById('modalEncargado').style.display = 'none';
+    }
+  </script>
+</body>
+</html>

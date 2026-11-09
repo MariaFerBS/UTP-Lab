@@ -48,6 +48,12 @@
                   th:if="${totalIncidencias == null or totalIncidencias == 0}"
                   title="Sin incidencias"></span>
         </a>
+        <a th:href="@{/admin/encargados}" 
+   th:classappend="${activo == 'encargados' ? 'activo' : ''}" 
+   class="item-menu">
+    <i data-lucide="users"></i>
+    <span>Encargados</span>
+</a>
     </nav>
 </aside>
 

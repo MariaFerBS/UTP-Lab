@@ -77,17 +77,18 @@ public class InventarioAdminController {
         modelo.addAttribute("categorias", categorias);
         modelo.addAttribute("totalItems", totalItems);
         modelo.addAttribute("stockCritico", stockCritico);
-        
 
         return "admin/inventario";
     }
 
+    // 👇 MÉTODO ACTUALIZADO CON OPERACIÓN (SUMAR / RESTAR) 👇
     @PostMapping("/actualizar-stock/{idProducto}")
     @ResponseBody
     @Transactional
     public ResponseEntity<?> actualizarStock(
             @PathVariable("idProducto") String idProducto,
-            @RequestParam("cantidad") int cantidad) {
+            @RequestParam("cantidad") int cantidad,
+            @RequestParam("operacion") String operacion) {
 
         Optional<Producto> prodOpt = productoRepositorio.findById(idProducto);
         if (prodOpt.isEmpty()) {
@@ -96,7 +97,18 @@ public class InventarioAdminController {
 
         Producto p = prodOpt.get();
         int stockActual = (p.getStockActual() != null) ? p.getStockActual() : 0;
-        int nuevoStock = Math.max(0, stockActual + cantidad);
+        int nuevoStock = stockActual;
+
+        if ("SUMAR".equalsIgnoreCase(operacion)) {
+            nuevoStock += cantidad;
+        } else if ("RESTAR".equalsIgnoreCase(operacion)) {
+            nuevoStock -= cantidad;
+        }
+
+        if (nuevoStock < 0) {
+            return ResponseEntity.badRequest().body(Collections.singletonMap("error", "El stock no puede ser negativo"));
+        }
+
         p.setStockActual(nuevoStock);
         productoRepositorio.save(p);
 
@@ -144,7 +156,7 @@ public class InventarioAdminController {
     @GetMapping("/alertas/pdf")
     @Transactional(readOnly = true)
     public ResponseEntity<InputStreamResource> descargarAlertasPdf() {
-    // Productos con stock menor a 11 (agotados, críticos y bajos)
+        // Productos con stock menor a 11 (agotados, críticos y bajos)
         List<Producto> productosStockBajo = productoRepositorio.findAll().stream()
             .filter(p -> p.getStockActual() != null && p.getStockActual() <= 10)
             .toList();

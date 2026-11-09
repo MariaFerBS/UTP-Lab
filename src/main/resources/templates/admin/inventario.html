@@ -30,30 +30,36 @@
         </div>
 
         <!-- BÚSQUEDA Y CONTADORES -->
-<div class="barra-busqueda-inventario-figma">
-    <div class="caja-input-busqueda-figma">
-        <i data-lucide="search" style="width: 18px; height: 18px; color: #94a3b8; margin-right: 10px;"></i>
-        <input type="text" id="inputBuscarInventario" placeholder="Buscar por código o nombre..." oninput="filtrarInventario()" />
-    </div>
-    
-    <div class="contadores-inventario">
-        <span class="badge-total-items-figma" id="badgeTotalItems" th:text="${totalItems + ' registrados'}">12 registrados</span>
-        <span class="badge-alerta-stock-figma" th:if="${stockCritico > 0}" th:text="${stockCritico + ' con stock crítico'}">37 con stock crítico</span>
-    </div>
-</div>
+        <div class="barra-busqueda-inventario-figma">
+            <div class="caja-input-busqueda-figma">
+                <i data-lucide="search" style="width: 18px; height: 18px; color: #94a3b8; margin-right: 10px;"></i>
+                <input type="text" id="inputBuscarInventario" placeholder="Buscar por código o nombre..." oninput="filtrarInventario()" />
+            </div>
+            
+            <div class="contadores-inventario">
+                <span class="badge-total-items-figma" id="badgeTotalItems" th:text="${totalItems + ' registrados'}">12 registrados</span>
+                <span class="badge-alerta-stock-figma" th:if="${stockCritico > 0}" th:text="${stockCritico + ' con stock crítico'}">37 con stock crítico</span>
+            </div>
+        </div>
 
-<!-- FILTROS POR CATEGORÍA -->
-<div class="barra-filtros-inventario-figma">
-    <button type="button" class="btn-filtro-inv activo" data-cat="TODOS" onclick="filtrarCategoria(this)">Todos</button>
-    <button th:each="c : ${categorias}" 
-            type="button" 
-            class="btn-filtro-inv" 
-            th:text="${c}" 
-            th:data-cat="${c}" 
-            onclick="filtrarCategoria(this)">
-        Categoría
-    </button>
-</div>
+        <!-- FILTROS POR CATEGORÍA Y STOCK CRÍTICO -->
+        <div class="barra-filtros-inventario-figma">
+            <button type="button" class="btn-filtro-inv activo" data-cat="TODOS" onclick="filtrarCategoria(this)">Todos</button>
+            
+            <!-- Botón de Stock Crítico -->
+            <button type="button" id="btnFiltroCritico" class="btn-filtro-inv" onclick="toggleStockCritico()" style="background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3;">
+                ⚠️ Stock Crítico
+            </button>
+
+            <button th:each="c : ${categorias}" 
+                    type="button" 
+                    class="btn-filtro-inv" 
+                    th:text="${c}" 
+                    th:data-cat="${c}" 
+                    onclick="filtrarCategoria(this)">
+                Categoría
+            </button>
+        </div>
 
         <!-- TABLA COMPLETA DE INVENTARIO -->
         <div class="card-panel-blanco tabla-card-inventario">
@@ -75,7 +81,8 @@
                   class="fila-producto-inv"
                   th:data-nombre="${p.nombre}"
                   th:data-codigo="${p.idProducto}"
-                  th:data-categoria="${p.categoria != null ? p.categoria : ''}">
+                  th:data-categoria="${p.categoria != null ? p.categoria : ''}"
+                  th:data-critico="${(p.stockActual != null and p.stockActual <= 10) ? 'true' : 'false'}">
                 <td>
                   <span class="codigo-reserva-gris" th:text="${p.idProducto}">IQ0001</span>
                 </td>
@@ -111,25 +118,31 @@
                   <span th:if="${p.stockActual == null or p.stockActual <= 0}" class="badge-estado-stock agotado">✕ Agotado</span>
                 </td>
                 <td style="text-align: center;">
-                  <div class="acciones-stock-botones">
+                  <!-- 👇 NUEVOS CONTROLES DE STOCK MANUAL 👇 -->
+                  <div class="acciones-stock-botones" style="display: flex; align-items: center; justify-content: center; gap: 5px;">
+                    <input type="number" 
+                           th:id="'cantidad-' + ${p.idProducto}" 
+                           placeholder="0" 
+                           min="1" 
+                           style="width: 50px; padding: 0.3rem; border: 1px solid #cbd5e1; border-radius: 6px; text-align: center; font-size: 0.8rem;">
+                    
                     <button type="button" 
                             class="btn-stock-mini btn-sumar" 
                             th:data-id="${p.idProducto}" 
-                            data-cant="10" 
-                            onclick="ejecutarAjusteStock(this)" 
-                            title="Sumar 10">+10</button>
-                    <button type="button" 
-                            class="btn-stock-mini btn-sumar" 
-                            th:data-id="${p.idProducto}" 
-                            data-cant="1" 
-                            onclick="ejecutarAjusteStock(this)" 
-                            title="Sumar 1">+1</button>
+                            onclick="actualizarStockManual(this, 'SUMAR')" 
+                            style="background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; padding: 0.3rem 0.5rem; border-radius: 6px; cursor: pointer;"
+                            title="Sumar">
+                            <i data-lucide="plus" style="width: 14px;"></i>
+                    </button>
+                    
                     <button type="button" 
                             class="btn-stock-mini btn-restar" 
                             th:data-id="${p.idProducto}" 
-                            data-cant="-1" 
-                            onclick="ejecutarAjusteStock(this)" 
-                            title="Restar 1">-1</button>
+                            onclick="actualizarStockManual(this, 'RESTAR')" 
+                            style="background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; padding: 0.3rem 0.5rem; border-radius: 6px; cursor: pointer;"
+                            title="Restar">
+                            <i data-lucide="minus" style="width: 14px;"></i>
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -219,5 +232,76 @@
   <script th:src="@{/js/admin-inventario.js}"></script>
   <!-- SCRIPTS DEL TOPBAR (necesario para la campanita) -->
   <div th:replace="~{fragments/topbar-admin :: scripts}"></div>
+
+  <!-- SCRIPT PARA ACTUALIZAR STOCK MANUAL Y FILTRO CRÍTICO -->
+  <script>
+    function actualizarStockManual(btn, operacion) {
+        const idProducto = btn.getAttribute('data-id');
+        const input = document.getElementById('cantidad-' + idProducto);
+        const cantidad = parseInt(input.value);
+
+        if (!cantidad || cantidad <= 0) {
+            alert("Por favor, ingresa una cantidad mayor a 0.");
+            return;
+        }
+
+        fetch(`/admin/inventario/actualizar-stock/${idProducto}?cantidad=${cantidad}&operacion=${operacion}`, {
+            method: 'POST'
+        })
+        .then(res => {
+            if(!res.ok) return res.json().then(err => { throw new Error(err.error); });
+            return res.json();
+        })
+        .then(data => {
+            // Actualizar el stock visualmente sin recargar la página
+            document.getElementById('stock-val-' + idProducto).innerText = data.nuevoStock;
+            input.value = ''; // Limpiar input
+            
+            // Recargar la página para actualizar el estado de "Bajo" o "Disponible"
+            window.location.reload();
+        })
+        .catch(err => {
+            alert("Error: " + err.message);
+        });
+    }
+
+    let filtroCriticoActivo = false;
+    function toggleStockCritico() {
+        filtroCriticoActivo = !filtroCriticoActivo;
+        const btn = document.getElementById('btnFiltroCritico');
+        const filas = document.querySelectorAll('.fila-producto-inv');
+
+        if (filtroCriticoActivo) {
+            // Activar filtro
+            btn.style.background = '#e11d48';
+            btn.style.color = 'white';
+            btn.style.border = '1px solid #e11d48';
+            
+            // Quitar clase activo de las otras categorías
+            document.querySelectorAll('.btn-filtro-inv').forEach(b => {
+                if (b !== btn) b.classList.remove('activo');
+            });
+
+            filas.forEach(fila => {
+                const esCritico = fila.getAttribute('data-critico') === 'true';
+                fila.style.display = esCritico ? '' : 'none';
+            });
+        } else {
+            // Desactivar filtro
+            btn.style.background = '#fff1f2';
+            btn.style.color = '#e11d48';
+            btn.style.border = '1px solid #fecdd3';
+            
+            // Restaurar vista normal
+            document.querySelectorAll('.btn-filtro-inv').forEach(b => b.classList.remove('activo'));
+            const btnTodos = document.querySelector('.btn-filtro-inv[data-cat="TODOS"]');
+            if (btnTodos) btnTodos.classList.add('activo');
+
+            filas.forEach(fila => {
+                fila.style.display = '';
+            });
+        }
+    }
+  </script>
 </body>
 </html>

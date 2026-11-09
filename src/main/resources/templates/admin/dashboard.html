@@ -70,10 +70,48 @@
             </a>
         </div>
 
-        <!-- 4 TARJETAS SUPERIORES DE MÉTRICAS -->
+        <!-- 🚀 NUEVO: TARJETAS DE REPORTE MENSUAL 🚀 -->
+        <div class="grid-cuatro-metricas-figma" style="margin-bottom: 2rem;">
+            <div class="card-metrica-figma" style="background: linear-gradient(135deg, #eff6ff, #dbeafe); border: 1px solid #bfdbfe;">
+                <div class="cabecera-card-metrica">
+                    <span class="emoji-icono-metrica">📅</span>
+                    <span class="badge-tag-estado tag-verde" style="font-size: 0.7rem;">Este mes</span>
+                </div>
+                <strong class="num-grande-metrica" th:text="${totalReservasMes}">24</strong>
+                <span class="label-titulo-metrica">Reservas realizadas</span>
+                <span class="label-sub-metrica">durante el mes actual</span>
+            </div>
+
+            <div class="card-metrica-figma" style="background: linear-gradient(135deg, #f5f3ff, #ede9fe); border: 1px solid #ddd6fe;">
+                <div class="cabecera-card-metrica">
+                    <span class="emoji-icono-metrica">⏱️</span>
+                </div>
+                <strong class="num-grande-metrica">12</strong>
+                <span class="label-titulo-metrica">Horas de laboratorio</span>
+                <span class="label-sub-metrica">de uso registrado</span>
+            </div>
+
+            <div class="card-metrica-figma" style="background: linear-gradient(135deg, #fff1f2, #ffe4e6); border: 1px solid #fecdd3;">
+                <div class="cabecera-card-metrica">
+                    <span class="emoji-icono-metrica">⚠️</span>
+                </div>
+                <strong class="num-grande-metrica" th:text="${totalIncidenciasMes}">3</strong>
+                <span class="label-titulo-metrica">Incidencias reportadas</span>
+                <span class="label-sub-metrica">en el mes actual</span>
+            </div>
+
+            <div class="card-metrica-figma" style="background: linear-gradient(135deg, #f0fdf4, #dcfce7); border: 1px solid #bbf7d0;">
+                <div class="cabecera-card-metrica">
+                    <span class="emoji-icono-metrica">📈</span>
+                </div>
+                <strong class="num-grande-metrica">85%</strong>
+                <span class="label-titulo-metrica">Tasa de ocupación</span>
+                <span class="label-sub-metrica">de los laboratorios</span>
+            </div>
+        </div>
+
+        <!-- 4 TARJETAS SUPERIORES DE MÉTRICAS DIARIAS -->
         <div class="grid-cuatro-metricas-figma">
-          
-          <!-- 1. Labs en uso -->
           <div class="card-metrica-figma">
             <div class="cabecera-card-metrica">
               <span class="emoji-icono-metrica">🔬</span>
@@ -84,7 +122,6 @@
             <span class="label-sub-metrica" th:text="'de ' + ${totalLabsDisp} + ' disponibles'">de 12 disponibles</span>
           </div>
 
-          <!-- 2. Pendientes check-in -->
           <div class="card-metrica-figma">
             <div class="cabecera-card-metrica">
               <span class="emoji-icono-metrica">⏳</span>
@@ -95,7 +132,6 @@
             <span class="label-sub-metrica">reservas confirmadas</span>
           </div>
 
-          <!-- 3. Préstamos activos -->
           <div class="card-metrica-figma">
             <div class="cabecera-card-metrica">
               <span class="emoji-icono-metrica">📋</span>
@@ -106,7 +142,6 @@
             <span class="label-sub-metrica">en uso o devueltos</span>
           </div>
 
-          <!-- 4. Incidentes abiertos -->
           <div class="card-metrica-figma">
             <div class="cabecera-card-metrica">
               <span class="emoji-icono-metrica">⚠️</span>
@@ -116,13 +151,11 @@
             <span class="label-titulo-metrica">Incidentes abiertos</span>
             <span class="label-sub-metrica" th:text="${cantAlertasStock} + ' alertas de stock'">3 alertas de stock</span>
           </div>
-
         </div>
 
         <!-- CUERPO PRINCIPAL: ESTADOS DE LABORATORIOS Y AGENDA -->
         <div class="grid-principal-dash-figma">
           
-          <!-- COLUMNA IZQUIERDA: ESTADOS DE LABORATORIOS -->
           <div class="card-panel-blanco">
             <div class="cabecera-panel-flex">
               <strong class="titulo-panel-txt">Estados de laboratorios</strong>
@@ -133,7 +166,6 @@
               </div>
             </div>
 
-            <!-- Grilla 2xN de cubículos -->
             <div class="grilla-cubiculos-labs">
               <div th:each="lab : ${estadosLabs}" class="tarjeta-cubiculo-item">
                 <div class="fila-cubiculo-top">
@@ -154,7 +186,6 @@
             </div>
           </div>
 
-          <!-- COLUMNA DERECHA: AGENDA DE HOY -->
           <div class="card-panel-blanco">
             <div class="cabecera-panel-flex">
               <strong class="titulo-panel-txt">Agenda de hoy</strong>
@@ -182,17 +213,17 @@
 
         </div>
 
-        <!-- FILA INFERIOR: INCIDENCIAS RECIENTES Y ALERTAS DE STOCK -->
+        <!-- FILA INFERIOR: INCIDENCIAS RECIENTES Y ALERTAS DE STOCK (LIMITADOS Y CON SCROLL) -->
         <div class="grid-inferior-dash-figma">
           
           <!-- INCIDENCIAS RECIENTES -->
-          <div class="card-panel-blanco">
+          <div class="card-panel-blanco" style="display: flex; flex-direction: column;">
             <div class="cabecera-panel-flex">
               <strong class="titulo-panel-txt">Incidencias recientes</strong>
               <a th:href="@{/admin/incidencias}" class="link-azul-vermas">Ver todas →</a>
             </div>
 
-            <div class="lista-incidencias-dash">
+            <div class="lista-incidencias-dash" style="max-height: 350px; overflow-y: auto; padding-right: 5px;">
               <div th:each="inc : ${incidenciasRecientes}" class="fila-incidencia-item">
                 <div class="icono-emoji-incidencia">📦</div>
                 <div class="info-incidencia-col">
@@ -201,23 +232,29 @@
                 </div>
                 <span class="monto-deuda-rojo" th:text="${inc.monto}">S/ 450.00</span>
               </div>
+              <div th:if="${#lists.isEmpty(incidenciasRecientes)}" style="text-align: center; padding: 2rem; color: #94a3b8; font-size: 0.85rem;">
+                No hay incidencias recientes.
+              </div>
             </div>
           </div>
 
           <!-- ALERTAS DE STOCK -->
-          <div class="card-panel-blanco">
+          <div class="card-panel-blanco" style="display: flex; flex-direction: column;">
             <div class="cabecera-panel-flex">
-              <strong class="titulo-panel-txt">Alertas de stock</strong>
+              <strong class="titulo-panel-txt">Alertas de stock (Top 5)</strong>
               <a th:href="@{/admin/inventario}" class="link-azul-vermas">Ver inventario →</a>
             </div>
 
-            <div class="lista-alertas-amarillas">
+            <div class="lista-alertas-amarillas" style="max-height: 350px; overflow-y: auto; padding-right: 5px;">
               <div th:each="stk : ${alertasStock}" class="card-alerta-amarilla-stock">
                 <span class="icono-triangulo-stock">⚠️</span>
                 <div class="info-alerta-stock-col">
                   <strong class="nombre-insumo-stock" th:text="${stk.producto}">Hidróxido de sodio (NaOH)</strong>
                   <span class="cant-minima-stock" th:text="${stk.stockActual} + ' (mín: ' + ${stk.minimo} + ')'">85 g (mín: 100)</span>
                 </div>
+              </div>
+              <div th:if="${#lists.isEmpty(alertasStock)}" style="text-align: center; padding: 2rem; color: #94a3b8; font-size: 0.85rem;">
+                Todo el stock está en orden.
               </div>
             </div>
           </div>
@@ -231,7 +268,6 @@
   <!-- SCRIPTS GLOBALES -->
   <div th:replace="~{fragments/scripts}"></div>
   <script th:src="@{/js/admin-dashboard.js}"></script>
-  <!-- SCRIPTS DEL TOPBAR (necesario para la campanita) -->
   <div th:replace="~{fragments/topbar-admin :: scripts}"></div>
 </body>
 </html>

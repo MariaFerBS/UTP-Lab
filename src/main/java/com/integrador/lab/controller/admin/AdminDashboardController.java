@@ -63,21 +63,17 @@ public class AdminDashboardController {
         LocalDate hoy = LocalDate.now();
         boolean esHoy = fechaConsulta.equals(hoy);
 
-        // Contar cuántas reservas están listas para inspección (Estado DEVUELTA)
         long inspeccionesPendientes = reservaRepositorio.findByEstado("DEVUELTA").size();
         modelo.addAttribute("inspeccionesPendientes", inspeccionesPendientes);
 
-        // Subtítulo con fecha formateada
         Locale espLocale = new Locale("es", "PE");
         String diaSemana = fechaConsulta.getDayOfWeek().getDisplayName(TextStyle.FULL, espLocale);
         String mes = fechaConsulta.getMonth().getDisplayName(TextStyle.FULL, espLocale);
         String fechaFormateada = diaSemana + ", " + fechaConsulta.getDayOfMonth() + " de " + mes + " de " + fechaConsulta.getYear();
 
-        // ============ RESERVAS DE LA FECHA SELECCIONADA ============
         List<Reserva> reservasDeFecha = reservaRepositorio.findByFechaReserva(fechaConsulta);
         if (reservasDeFecha == null) reservasDeFecha = new ArrayList<>();
 
-        // ============ 1. KPIs (dependientes de la fecha) ============
         long cantLabsEnUso = reservasDeFecha.stream()
                 .filter(r -> "EN_USO".equals(r.getEstado()))
                 .count();
@@ -88,19 +84,15 @@ public class AdminDashboardController {
 
         long cantPrestamosActivos = cantLabsEnUso;
 
-        // ============ 2. Incidentes (NO dependen de la fecha) ============
-        // CORREGIDO: Buscamos explícitamente las sanciones que están PENDIENTES o NOTIFICADAS
         List<Sancion> sancionesPendientes = sancionRepositorio.findAll().stream()
                 .filter(s -> "PENDIENTE".equalsIgnoreCase(s.getEstado()) || "NOTIFICADA".equalsIgnoreCase(s.getEstado()))
                 .toList();
         
-        // En AdminDashboardController.java, dentro de verDashboard:
-long cantIncidentesAbiertos = sancionRepositorio.findAll().stream()
-        .filter(s -> !"RESUELTA".equalsIgnoreCase(s.getEstado()) 
-                  && !"PAGADA".equalsIgnoreCase(s.getEstado()))
-        .count();
+        long cantIncidentesAbiertos = sancionRepositorio.findAll().stream()
+                .filter(s -> !"RESUELTA".equalsIgnoreCase(s.getEstado()) 
+                          && !"PAGADA".equalsIgnoreCase(s.getEstado()))
+                .count();
 
-        // ============ 3. Alertas de stock (NO dependen de la fecha) ============
         List<Producto> todosProductos = productoRepositorio.findAll();
         List<AlertaStockDto> alertasStock = new ArrayList<>();
         for (Producto p : todosProductos) {
@@ -116,7 +108,6 @@ long cantIncidentesAbiertos = sancionRepositorio.findAll().stream()
         }
         long cantAlertasStock = alertasStock.size();
 
-        // ============ 4. Estados de laboratorios (según reservas de ESA fecha) ============
         List<Laboratorio> labsBD = laboratorioRepositorio.findAll();
         List<EstadoLabDto> listaEstadosLabs = new ArrayList<>();
 
@@ -127,11 +118,8 @@ long cantIncidentesAbiertos = sancionRepositorio.findAll().stream()
 
             for (Reserva r : reservasDeFecha) {
                 if (r.getLaboratorio() != null && r.getLaboratorio().getIdLab().equals(lab.getIdLab())) {
-                    if ("EN_USO".equals(r.getEstado())) {
-                        estado = "En uso";
-                    } else if ("MANTENIMIENTO".equals(r.getEstado())) {
-                        estado = "Mantenimiento";
-                    }
+                    if ("EN_USO".equals(r.getEstado())) estado = "En uso";
+                    else if ("MANTENIMIENTO".equals(r.getEstado())) estado = "Mantenimiento";
                     break;
                 }
             }
@@ -152,25 +140,18 @@ long cantIncidentesAbiertos = sancionRepositorio.findAll().stream()
             for (int i = 0; i < defs.length; i++) {
                 String est = "Libre";
                 for (Reserva r : reservasDeFecha) {
-                    if (r.getLaboratorio() != null 
-                        && r.getLaboratorio().getUbicacionCubiculo() != null 
-                        && r.getLaboratorio().getUbicacionCubiculo().equals(defs[i]) 
-                        && "EN_USO".equals(r.getEstado())) {
+                    if (r.getLaboratorio() != null && r.getLaboratorio().getUbicacionCubiculo() != null 
+                        && r.getLaboratorio().getUbicacionCubiculo().equals(defs[i]) && "EN_USO".equals(r.getEstado())) {
                         est = "En uso";
                         break;
                     }
                 }
-                listaEstadosLabs.add(new EstadoLabDto(
-                        defs[i], nombres[i],
-                        "Bloque " + defs[i].charAt(0) + " · 12 puestos",
-                        est
-                ));
+                listaEstadosLabs.add(new EstadoLabDto(defs[i], nombres[i], "Bloque " + defs[i].charAt(0) + " · 12 puestos", est));
             }
         }
 
         long totalLabsDisponibles = listaEstadosLabs.size();
 
-        // ============ 5. Agenda de la fecha seleccionada ============
         List<AgendaHoyDto> agenda = new ArrayList<>();
         for (Reserva r : reservasDeFecha) {
             String horario = (r.getHoraInicio() != null && r.getHoraFin() != null)
@@ -186,19 +167,36 @@ long cantIncidentesAbiertos = sancionRepositorio.findAll().stream()
             agenda.add(new AgendaHoyDto(horario, labNom, solicitante, r.getEstado()));
         }
 
-        // ============ 6. Incidencias recientes (global) ============
         List<IncidenciaRecienteDto> incidenciasRecientes = new ArrayList<>();
         for (Sancion s : sancionesPendientes) {
-            String est = (s.getAlumno() != null)
-                    ? s.getAlumno().getNombre() + " " + s.getAlumno().getApellido() : "Estudiante";
-            String monto = (s.getMontoDeuda() != null)
-                    ? "S/ " + s.getMontoDeuda().setScale(2).toString() : "S/ 350.00";
-            String desc = (s.getMotivo() != null && !s.getMotivo().isBlank())
-                    ? s.getMotivo() : (s.getProducto() != null ? s.getProducto().getNombre() : "Material dañado");
+            String est = (s.getAlumno() != null) ? s.getAlumno().getNombre() + " " + s.getAlumno().getApellido() : "Estudiante";
+            String monto = (s.getMontoDeuda() != null) ? "S/ " + s.getMontoDeuda().setScale(2).toString() : "S/ 350.00";
+            String desc = (s.getMotivo() != null && !s.getMotivo().isBlank()) ? s.getMotivo() : (s.getProducto() != null ? s.getProducto().getNombre() : "Material dañado");
             incidenciasRecientes.add(new IncidenciaRecienteDto(desc, est, monto));
         }
 
-        // ============ 7. Pasar todo al modelo ============
+        // ============ 7. MÉTRICAS DEL MES ACTUAL (NUEVAS) ============
+        LocalDate inicioMes = LocalDate.now().withDayOfMonth(1);
+        LocalDate finMes = LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth());
+
+        long totalReservasMes = reservaRepositorio.findAll().stream()
+                .filter(r -> r.getFechaReserva() != null 
+                        && !r.getFechaReserva().isBefore(inicioMes) 
+                        && !r.getFechaReserva().isAfter(finMes)
+                        && !"CANCELADA".equalsIgnoreCase(r.getEstado()))
+                .count();
+
+        long totalIncidenciasMes = sancionRepositorio.findAll().stream()
+                .filter(s -> s.getFechaSancion() != null 
+                        && !s.getFechaSancion().toLocalDate().isBefore(inicioMes) 
+                        && !s.getFechaSancion().toLocalDate().isAfter(finMes))
+                .count();
+
+        // LÍMITE A 5 ELEMENTOS PARA EL DASHBOARD
+        List<IncidenciaRecienteDto> top5Incidencias = incidenciasRecientes.stream().limit(5).toList();
+        List<AlertaStockDto> top5Alertas = alertasStock.stream().limit(5).toList();
+
+        // ============ 8. Pasar todo al modelo ============
         modelo.addAttribute("fechaHoy", fechaFormateada);
         modelo.addAttribute("fechaConsulta", fechaConsulta.toString());
         modelo.addAttribute("fechaAnterior", fechaConsulta.minusDays(1).toString());
@@ -214,25 +212,21 @@ long cantIncidentesAbiertos = sancionRepositorio.findAll().stream()
 
         modelo.addAttribute("estadosLabs", listaEstadosLabs);
         modelo.addAttribute("agendaHoy", agenda);
-        modelo.addAttribute("incidenciasRecientes", incidenciasRecientes);
-        modelo.addAttribute("alertasStock", alertasStock);
+        modelo.addAttribute("incidenciasRecientes", top5Incidencias);
+        modelo.addAttribute("alertasStock", top5Alertas);
+
+        modelo.addAttribute("totalReservasMes", totalReservasMes);
+        modelo.addAttribute("totalIncidenciasMes", totalIncidenciasMes);
 
         return "admin/dashboard";
     }
 
+    // DTOs
     public static class EstadoLabDto {
-        private String codigo;
-        private String nombre;
-        private String ubicacion;
-        private String estado;
-
+        private String codigo, nombre, ubicacion, estado;
         public EstadoLabDto(String codigo, String nombre, String ubicacion, String estado) {
-            this.codigo = codigo;
-            this.nombre = nombre;
-            this.ubicacion = ubicacion;
-            this.estado = estado;
+            this.codigo = codigo; this.nombre = nombre; this.ubicacion = ubicacion; this.estado = estado;
         }
-
         public String getCodigo() { return codigo; }
         public String getNombre() { return nombre; }
         public String getUbicacion() { return ubicacion; }
@@ -240,18 +234,10 @@ long cantIncidentesAbiertos = sancionRepositorio.findAll().stream()
     }
 
     public static class AgendaHoyDto {
-        private String horario;
-        private String laboratorio;
-        private String solicitante;
-        private String estado;
-
+        private String horario, laboratorio, solicitante, estado;
         public AgendaHoyDto(String horario, String laboratorio, String solicitante, String estado) {
-            this.horario = horario;
-            this.laboratorio = laboratorio;
-            this.solicitante = solicitante;
-            this.estado = estado;
+            this.horario = horario; this.laboratorio = laboratorio; this.solicitante = solicitante; this.estado = estado;
         }
-
         public String getHorario() { return horario; }
         public String getLaboratorio() { return laboratorio; }
         public String getSolicitante() { return solicitante; }
@@ -259,36 +245,22 @@ long cantIncidentesAbiertos = sancionRepositorio.findAll().stream()
     }
 
     public static class IncidenciaRecienteDto {
-        private String item;
-        private String estudiante;
-        private String monto;
-
+        private String item, estudiante, monto;
         public IncidenciaRecienteDto(String item, String estudiante, String monto) {
-            this.item = item;
-            this.estudiante = estudiante;
-            this.monto = monto;
+            this.item = item; this.estudiante = estudiante; this.monto = monto;
         }
-
         public String getItem() { return item; }
         public String getEstudiante() { return estudiante; }
         public String getMonto() { return monto; }
     }
 
     public static class AlertaStockDto {
-        private String producto;
-        private String stockActual;
-        private String minimo;
-
+        private String producto, stockActual, minimo;
         public AlertaStockDto(String producto, String stockActual, String minimo) {
-            this.producto = producto;
-            this.stockActual = stockActual;
-            this.minimo = minimo;
+            this.producto = producto; this.stockActual = stockActual; this.minimo = minimo;
         }
-
         public String getProducto() { return producto; }
         public String getStockActual() { return stockActual; }
         public String getMinimo() { return minimo; }
     }
 }
-
-
