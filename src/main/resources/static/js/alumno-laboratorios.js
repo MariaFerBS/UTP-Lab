@@ -804,3 +804,16 @@ setInterval(() => {
             });
     });
 }, 30000); // 30000 milisegundos = 30 segundos
+
+function confirmarCancelacionReserva() {
+    // 1. Pedimos confirmación
+    if (!confirm('¿Estás seguro de que deseas cancelar esta reserva? Esta acción liberará el espacio.')) {
+        return;
+    }
+
+    // 2. Obtenemos el formulario
+    const form = document.getElementById('formCancelarReserva');
+
+    // 3. Hacemos el submit (el backend nos redirigirá a /alumno/laboratorios)
+    form.submit();
+}

@@ -337,18 +337,23 @@ public class AlumnoPortalController {
             }
         }
 
-        // 2. EVITAR SUPERPOSICIONES
+                // 2. EVITAR SUPERPOSICIONES
         List<Reserva> reservasDelLaboratorio = reservaRepositorio.findByLaboratorio_IdLabAndFechaReserva(idLab, fecha);
 
         for (Reserva reservaExistente : reservasDelLaboratorio) {
             String estado = reservaExistente.getEstado() == null ? "" : reservaExistente.getEstado().trim().toUpperCase();
+            
+            // 👇 AQUÍ ESTÁ LA CLAVE 👇
+            // Si el estado NO es CONFIRMADA ni EN_USO, simplemente ignoramos la reserva.
+            // Esto libera automáticamente las CANCELADAS, NO_ASISTIO, DEVUELTA, etc.
             boolean reservaActiva = estado.equals("CONFIRMADA") || estado.equals("EN_USO");
-            if (!reservaActiva) continue;
+            if (!reservaActiva) continue; 
 
             LocalTime inicioExistente = reservaExistente.getHoraInicio();
             LocalTime finExistente = reservaExistente.getHoraFin();
             if (inicioExistente == null || finExistente == null) continue;
 
+            // Validamos si hay cruce de horario
             boolean haySuperposicion = horaInicio.isBefore(finExistente) && horaFin.isAfter(inicioExistente);
 
             if (haySuperposicion) {
@@ -846,7 +851,7 @@ public class AlumnoPortalController {
         return resp;
     }
 
-    // =========================================================================
+        // =========================================================================
     // 8. CANCELAR RESERVA
     // =========================================================================
     @PostMapping("/reservas/{idReserva}/cancelar")
@@ -865,7 +870,7 @@ public class AlumnoPortalController {
 
         if (reservaOpt.isEmpty()) {
             redirectAttributes.addFlashAttribute("mensajeCancelacion", "No se encontró la reserva.");
-            return "redirect:/alumno/cuenta";
+            return "redirect:/alumno/laboratorios"; // 👈 CAMBIADO
         }
 
         Reserva reserva = reservaOpt.get();
@@ -876,14 +881,14 @@ public class AlumnoPortalController {
 
         if (!participa) {
             redirectAttributes.addFlashAttribute("mensajeCancelacion", "No tienes permiso para cancelar esta reserva.");
-            return "redirect:/alumno/cuenta";
+            return "redirect:/alumno/laboratorios"; // 👈 CAMBIADO
         }
 
         String estado = reserva.getEstado() == null ? "" : reserva.getEstado().trim().toUpperCase();
 
         if (!estado.equals("CONFIRMADA")) {
             redirectAttributes.addFlashAttribute("mensajeCancelacion", "Solo se pueden cancelar reservas confirmadas.");
-            return "redirect:/alumno/cuenta";
+            return "redirect:/alumno/laboratorios"; // 👈 CAMBIADO
         }
 
         java.time.ZoneId zonaPeru = java.time.ZoneId.of("America/Lima");
@@ -894,7 +899,7 @@ public class AlumnoPortalController {
 
         if (inicioReserva.isBefore(limiteCancelacion)) {
             redirectAttributes.addFlashAttribute("errorReserva", "No puedes cancelar la reserva porque faltan menos de 30 minutos para su inicio.");
-            return "redirect:/alumno/laboratorios";
+            return "redirect:/alumno/laboratorios"; // 👈 CAMBIADO
         }
 
         reserva.setEstado("CANCELADA");
@@ -919,12 +924,11 @@ public class AlumnoPortalController {
             System.out.println("❌ Error al enviar correo de cancelación: " + e.getMessage());
         }
 
-        // ⭐ ENVIAR CORREO DE CANCELACIÓN AL ENCARGADO DEL LABORATORIO
+        // ⭐ ENVIAR CORREO DE CANCELACIÓN AL ENCARGADO
         try {
             if (reserva.getLaboratorio() != null && reserva.getLaboratorio().getEncargado() != null) {
                 com.integrador.lab.modelo.Encargado enc = reserva.getLaboratorio().getEncargado();
                 
-                // Usamos la misma lógica de mapeo de correos para tus pruebas
                 String correoEncargado = enc.getIdEncargado().toLowerCase() + "@utp.edu.pe";
                 if ("E45985625".equals(enc.getIdEncargado())) correoEncargado = "U24225302@utp.edu.pe";
                 if ("E45985626".equals(enc.getIdEncargado())) correoEncargado = "U24204158@utp.edu.pe";
@@ -948,7 +952,7 @@ public class AlumnoPortalController {
         }
 
         redirectAttributes.addFlashAttribute("mensajeCancelacion", "La reserva " + idReserva + " fue cancelada correctamente.");
-        return "redirect:/alumno/cuenta";
+        return "redirect:/alumno/laboratorios"; // 👈 CAMBIADO
     }
 
     @GetMapping("/api/notificaciones")
