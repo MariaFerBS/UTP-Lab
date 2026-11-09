@@ -32,15 +32,29 @@
           </div>
         </div>
 
-        <!-- BARRA DE BÚSQUEDA -->
-        <div style="margin-bottom: 1.5rem; position: relative; max-width: 500px;">
-            <i data-lucide="search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; width: 18px;"></i>
-            <input type="text" 
-                   id="inputBuscarReserva" 
-                   onkeyup="filtrarReservas()" 
-                   placeholder="Buscar por estudiante, laboratorio o código..." 
-                   style="width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; border-radius: 10px; border: 1px solid #cbd5e1; outline: none; font-size: 0.9rem; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
-        </div>
+        <!-- FORMULARIO DE BÚSQUEDA GLOBAL -->
+        <form action="/admin/inspeccion" method="GET" style="margin-bottom: 1.5rem; display: flex; gap: 0.5rem; max-width: 600px;">
+            <input type="hidden" name="fecha" th:value="${fechaConsulta}">
+
+            <div style="position: relative; flex: 1;">
+                <i data-lucide="search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; width: 18px;"></i>
+                <input type="text" 
+                       name="buscar" 
+                       th:value="${buscar}"
+                       placeholder="Buscar por estudiante, laboratorio o código (todas las fechas)..." 
+                       style="width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; border-radius: 10px; border: 1px solid #cbd5e1; outline: none; font-size: 0.9rem; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+            </div>
+            
+            <button type="submit" style="background: #2563eb; color: white; border: none; padding: 0 1.5rem; border-radius: 10px; font-weight: 600; cursor: pointer;">
+                Buscar
+            </button>
+            
+            <a th:if="${buscar != null and !buscar.isEmpty()}" 
+               th:href="@{/admin/inspeccion(fecha=${fechaConsulta})}" 
+               style="background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; padding: 0 1rem; border-radius: 10px; font-weight: 600; display: flex; align-items: center; text-decoration: none;">
+                Limpiar
+            </a>
+        </form>
 
         <!-- LISTA DE INSPECCIONES -->
         <div id="contenedorInspeccion" 
@@ -66,8 +80,9 @@
                 </span>
               </div>
               
+              <!-- 👇 Agregamos la fecha al lado para la búsqueda global 👇 -->
               <div class="metadatos-horario-checkin">
-                <span th:text="${ins.cubiculo + ' · ' + ins.fecha + ' · ' + ins.horario}">A-101 · 2026-08-21 · 09:00–11:00</span>
+                <span th:text="${ins.fecha} + ' · ' + ${ins.cubiculo} + ' · ' + ${ins.horario}">A-101 · 2026-08-21 · 09:00–11:00</span>
               </div>
               
               <div class="pills-integrantes-flex">
@@ -115,7 +130,9 @@
              class="tarjeta-sin-checkins-vacia" 
              th:style="${#lists.isEmpty(inspecciones)} ? 'display:flex;' : 'display:none;'">
           <span class="icono-fiesta-confeti">🎉</span>
-          <strong>Sin inspecciones registradas para esta fecha</strong>
+          <strong th:text="${buscar != null and !buscar.isEmpty() ? 'No se encontraron resultados para tu búsqueda' : 'Sin inspecciones registradas para esta fecha'}">
+              Sin inspecciones registradas para esta fecha
+          </strong>
         </div>
 
       </section>
@@ -124,25 +141,5 @@
 
   <div th:replace="~{fragments/scripts}"></div>
   <script th:src="@{/js/admin-inspeccion.js}"></script>
-
-  <!-- SCRIPT PARA FILTRAR RESERVAS -->
-  <script>
-    function filtrarReservas() {
-        const texto = document.getElementById('inputBuscarReserva').value.toLowerCase().trim();
-        const tarjetas = document.querySelectorAll('.tarjeta-reserva-filtro');
-
-        tarjetas.forEach(tarjeta => {
-            const estudiantes = tarjeta.querySelector('.dato-estudiante')?.innerText.toLowerCase() || "";
-            const codigo = tarjeta.querySelector('.dato-codigo')?.innerText.toLowerCase() || "";
-            const laboratorio = tarjeta.querySelector('.dato-lab')?.innerText.toLowerCase() || "";
-
-            if (texto === "" || estudiantes.includes(texto) || codigo.includes(texto) || laboratorio.includes(texto)) {
-                tarjeta.style.display = '';
-            } else {
-                tarjeta.style.display = 'none';
-            }
-        });
-    }
-  </script>
 </body>
 </html>

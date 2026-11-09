@@ -48,14 +48,15 @@ public class IncidenciasAdminController {
     @Autowired 
     private ReservaRepository reservaRepositorio;
 
-        @GetMapping
+    @GetMapping
     @Transactional(readOnly = true)
     public String verIncidencias(
             @RequestParam(required = false) String fecha,
+            @RequestParam(required = false) String buscar,
             HttpSession sesion, 
             Model modelo) {
 
-        // 1. Calcular la fecha de consulta (si es null, usaremos "hoy" para el selector visual)
+        // 1. Calcular la fecha de consulta
         java.time.LocalDate fechaConsulta = java.time.LocalDate.now();
         if (fecha != null && !fecha.isEmpty()) {
             try {
@@ -65,6 +66,7 @@ public class IncidenciasAdminController {
             }
         }
         final java.time.LocalDate fechaFinal = fechaConsulta;
+        final String textoBusqueda = (buscar != null) ? buscar.toLowerCase().trim() : "";
 
         // 2. Traer TODAS las sanciones de la BD
         List<Sancion> todas = sancionRepositorio.findAll();
@@ -77,6 +79,18 @@ public class IncidenciasAdminController {
                 .filter(s -> !"RESUELTA".equalsIgnoreCase(s.getEstado()) && !"PAGADA".equalsIgnoreCase(s.getEstado()))
                 .collect(Collectors.toList());
 
+        // 👇 FILTRO GLOBAL POR BÚSQUEDA 👇
+        if (!textoBusqueda.isEmpty()) {
+            activas = activas.stream().filter(s -> {
+                boolean coincideItem = s.getProducto() != null && s.getProducto().getNombre().toLowerCase().contains(textoBusqueda);
+                boolean coincideMotivo = s.getMotivo() != null && s.getMotivo().toLowerCase().contains(textoBusqueda);
+                boolean coincideLab = s.getReserva() != null && s.getReserva().getLaboratorio() != null && s.getReserva().getLaboratorio().getNombre().toLowerCase().contains(textoBusqueda);
+                boolean coincideAlumno = s.getAlumno() != null && (s.getAlumno().getNombre() + " " + s.getAlumno().getApellido()).toLowerCase().contains(textoBusqueda);
+                boolean coincideId = s.getIdSancion().toLowerCase().contains(textoBusqueda);
+                return coincideItem || coincideMotivo || coincideLab || coincideAlumno || coincideId;
+            }).collect(Collectors.toList());
+        }
+
         Map<String, List<Sancion>> activasPorReserva = activas.stream()
                 .collect(Collectors.groupingBy(s -> s.getReserva() != null ? s.getReserva().getIdReserva() : "SIN_RESERVA"));
 
@@ -88,7 +102,6 @@ public class IncidenciasAdminController {
             List<Sancion> sancionesDelGrupo = entry.getValue();
             Sancion primera = sancionesDelGrupo.get(0);
 
-            // Contadores
             boolean isNotif = sancionesDelGrupo.stream()
                     .anyMatch(s -> "NOTIFICADA".equalsIgnoreCase(s.getEstado()) || "NOTIFICADO".equalsIgnoreCase(s.getEstado()));
 
@@ -98,7 +111,6 @@ public class IncidenciasAdminController {
                 cantAbiertas += sancionesDelGrupo.size();
             }
 
-            // Datos
             BigDecimal montoGrupo = sancionesDelGrupo.stream()
                     .map(Sancion::getMontoDeuda)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -129,12 +141,27 @@ public class IncidenciasAdminController {
         }
 
         // =====================================================================
-        // SECCIÓN 2: HISTORIAL (Solo RESUELTAS, filtradas por fecha)
+        // SECCIÓN 2: HISTORIAL (Solo RESUELTAS, filtradas por fecha o búsqueda)
         // =====================================================================
         List<Sancion> resueltas = todas.stream()
                 .filter(s -> "RESUELTA".equalsIgnoreCase(s.getEstado()) || "PAGADA".equalsIgnoreCase(s.getEstado()))
-                .filter(s -> s.getFechaSancion() != null && s.getFechaSancion().toLocalDate().equals(fechaFinal))
                 .collect(Collectors.toList());
+
+        // 👇 FILTRO POR FECHA (solo si no hay búsqueda) O POR BÚSQUEDA GLOBAL 👇
+        if (!textoBusqueda.isEmpty()) {
+            resueltas = resueltas.stream().filter(s -> {
+                boolean coincideItem = s.getProducto() != null && s.getProducto().getNombre().toLowerCase().contains(textoBusqueda);
+                boolean coincideMotivo = s.getMotivo() != null && s.getMotivo().toLowerCase().contains(textoBusqueda);
+                boolean coincideLab = s.getReserva() != null && s.getReserva().getLaboratorio() != null && s.getReserva().getLaboratorio().getNombre().toLowerCase().contains(textoBusqueda);
+                boolean coincideAlumno = s.getAlumno() != null && (s.getAlumno().getNombre() + " " + s.getAlumno().getApellido()).toLowerCase().contains(textoBusqueda);
+                boolean coincideId = s.getIdSancion().toLowerCase().contains(textoBusqueda);
+                return coincideItem || coincideMotivo || coincideLab || coincideAlumno || coincideId;
+            }).collect(Collectors.toList());
+        } else {
+            resueltas = resueltas.stream()
+                    .filter(s -> s.getFechaSancion() != null && s.getFechaSancion().toLocalDate().equals(fechaFinal))
+                    .collect(Collectors.toList());
+        }
 
         Map<String, List<Sancion>> resueltasPorReserva = resueltas.stream()
                 .collect(Collectors.groupingBy(s -> s.getReserva() != null ? s.getReserva().getIdReserva() : "SIN_RESERVA"));
@@ -184,13 +211,13 @@ public class IncidenciasAdminController {
         modelo.addAttribute("cantNotificadas", cantNotificadas);
         modelo.addAttribute("cantResueltas", cantResueltas);
         
-        // Total global para la campanita (todas las activas)
         long totalGlobalActivas = activas.size();
         modelo.addAttribute("totalIncidencias", totalGlobalActivas);
 
         modelo.addAttribute("fechaConsulta", fechaConsulta.toString());
         modelo.addAttribute("fechaAnterior", fechaConsulta.minusDays(1).toString());
         modelo.addAttribute("fechaSiguiente", fechaConsulta.plusDays(1).toString());
+        modelo.addAttribute("buscar", buscar); // 👈 Enviamos el texto al HTML
 
         return "admin/incidencias";
     }
@@ -267,7 +294,7 @@ public class IncidenciasAdminController {
         return ResponseEntity.ok(Collections.singletonMap("status", "ok"));
     }
 
-    // DTO actualizado con el campo 'resuelta'
+    // DTO
     public static class IncidenciaCardDto {
         private String idSancion;
         private String item;

@@ -54,6 +54,7 @@ public class CheckinController {
     @Transactional(readOnly = true)
     public String verCheckin(
             @RequestParam(required = false) String fecha,
+            @RequestParam(required = false) String buscar, // 👈 NUEVO PARÁMETRO
             HttpSession sesion,
             Model modelo) {
 
@@ -67,9 +68,14 @@ public class CheckinController {
         }
 
         final java.time.LocalDate fechaFinal = fechaConsulta;
+        final String textoBusqueda = (buscar != null) ? buscar.toLowerCase().trim() : "";
 
         List<Reserva> todas = reservaRepositorio.findAll().stream()
-                .filter(r -> r.getFechaReserva() != null && r.getFechaReserva().equals(fechaFinal))
+                // 👇 SI HAY BÚSQUEDA, IGNORAMOS EL FILTRO DE FECHA 👇
+                .filter(r -> {
+                    if (!textoBusqueda.isEmpty()) return true; 
+                    return r.getFechaReserva() != null && r.getFechaReserva().equals(fechaFinal);
+                })
                 .filter(r -> !"CANCELADA".equalsIgnoreCase(r.getEstado()))
                 .sorted((a, b) -> b.getIdReserva().compareTo(a.getIdReserva()))
                 .toList();
@@ -94,7 +100,6 @@ public class CheckinController {
             String horario = (r.getHoraInicio() != null && r.getHoraFin() != null)
                     ? r.getHoraInicio() + "–" + r.getHoraFin() : "09:00–11:00";
 
-            // 👇 OBTENEMOS EL NOMBRE DEL ENCARGADO Y LA HORA 👇
             String nombreEncargado = null;
             String horaAccion = null;
 
@@ -104,7 +109,14 @@ public class CheckinController {
             if (r.getFechaHoraCheckin() != null) {
                 horaAccion = r.getFechaHoraCheckin().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
             }
-            // 👆 FIN 👆
+
+            // 👇 FILTRO EN MEMORIA (Por si el usuario busca un nombre, lab o código) 👇
+            if (!textoBusqueda.isEmpty()) {
+                boolean coincide = r.getIdReserva().toLowerCase().contains(textoBusqueda) ||
+                                   labNombre.toLowerCase().contains(textoBusqueda) ||
+                                   nombresIntegrantes.stream().anyMatch(n -> n.toLowerCase().contains(textoBusqueda));
+                if (!coincide) continue; 
+            }
 
             listaCheckin.add(new CheckinReservaDto(
                     r.getIdReserva(),
@@ -115,8 +127,8 @@ public class CheckinController {
                     horario,
                     r.getEstado(),
                     nombresIntegrantes,
-                    nombreEncargado, // Se lo pasamos al DTO
-                    horaAccion       // Se lo pasamos al DTO
+                    nombreEncargado,
+                    horaAccion
             ));
         }
 
@@ -124,6 +136,7 @@ public class CheckinController {
         modelo.addAttribute("fechaConsulta", fechaConsulta.toString());
         modelo.addAttribute("fechaAnterior", fechaConsulta.minusDays(1).toString());
         modelo.addAttribute("fechaSiguiente", fechaConsulta.plusDays(1).toString());
+        modelo.addAttribute("buscar", buscar); // 👈 Lo enviamos de vuelta al HTML
 
         return "admin/checkin";
     }
@@ -190,7 +203,6 @@ public class CheckinController {
                 ? r.getHoraInicio() + "–" + r.getHoraFin() : "09:00–11:00";
         String labNombre = (r.getLaboratorio() != null) ? r.getLaboratorio().getNombre() : "Laboratorio";
 
-        // Datos del encargado para el JS
         String nombreEncargado = null;
         String horaAccion = null;
         if (r.getEncargadoCheckin() != null) {
@@ -203,13 +215,13 @@ public class CheckinController {
         DetalleModalCheckinDto dto = new DetalleModalCheckinDto(
                 r.getIdReserva(), labNombre, horario,
                 listaEstudiantes, listaInsumos, listaEpps,
-                nombreEncargado, horaAccion // 👈 Agregados al DTO del modal
+                nombreEncargado, horaAccion
         );
 
         return ResponseEntity.ok(dto);
     }
 
-    // 3. CONFIRMAR CHECK-IN (Se deja por compatibilidad, aunque el admin ya no lo usa)
+    // 3. CONFIRMAR CHECK-IN
     @PostMapping("/confirmar/{idReserva}")
     @ResponseBody
     @Transactional
@@ -238,9 +250,7 @@ public class CheckinController {
         return ResponseEntity.ok(Collections.singletonMap("status", "ok"));
     }
 
-    // =========================================================================
-    // DTOs AUXILIARES (Aquí estaba el error, faltaban las variables)
-    // =========================================================================
+    // DTOs AUXILIARES
     public static class CheckinReservaDto {
         private String idReserva;
         private String laboratorio;
@@ -250,8 +260,8 @@ public class CheckinController {
         private String horario;
         private String estado;
         private List<String> integrantes;
-        private String nombreEncargado; // 👈 AGREGADO
-        private String horaAccion;      // 👈 AGREGADO
+        private String nombreEncargado;
+        private String horaAccion;
 
         public CheckinReservaDto(String idReserva, String laboratorio, String tipoLab, String cubiculo, String fecha, String horario, String estado, List<String> integrantes, String nombreEncargado, String horaAccion) {
             this.idReserva = idReserva;
@@ -274,8 +284,8 @@ public class CheckinController {
         public String getHorario() { return horario; }
         public String getEstado() { return estado; }
         public List<String> getIntegrantes() { return integrantes; }
-        public String getNombreEncargado() { return nombreEncargado; } // 👈 GETTER AGREGADO
-        public String getHoraAccion() { return horaAccion; }           // 👈 GETTER AGREGADO
+        public String getNombreEncargado() { return nombreEncargado; }
+        public String getHoraAccion() { return horaAccion; }
     }
 
     public static class DetalleModalCheckinDto {
@@ -285,8 +295,8 @@ public class CheckinController {
         private List<IntegranteDetalleDto> integrantes;
         private List<ItemDetalleDto> insumos;
         private List<ItemDetalleDto> epps;
-        private String nombreEncargado; // 👈 AGREGADO
-        private String horaAccion;      // 👈 AGREGADO
+        private String nombreEncargado;
+        private String horaAccion;
 
         public DetalleModalCheckinDto(String idReserva, String laboratorio, String horario, List<IntegranteDetalleDto> integrantes, List<ItemDetalleDto> insumos, List<ItemDetalleDto> epps, String nombreEncargado, String horaAccion) {
             this.idReserva = idReserva;

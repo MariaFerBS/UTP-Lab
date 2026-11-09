@@ -47,18 +47,31 @@
         </div>
 
         <!-- ======================================================= -->
-        <!-- BARRA DE BÚSQUEDA GLOBAL                                -->
+        <!-- FORMULARIO DE BÚSQUEDA GLOBAL                           -->
         <!-- ======================================================= -->
-        <div style="margin-bottom: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;">
-            <div style="flex: 1; min-width: 300px; position: relative;">
+        <form action="/admin/incidencias" method="GET" style="margin-bottom: 2rem; display: flex; gap: 0.5rem; max-width: 700px;">
+            <!-- Mantenemos la fecha oculta -->
+            <input type="hidden" name="fecha" th:value="${fechaConsulta}">
+
+            <div style="position: relative; flex: 1;">
                 <i data-lucide="search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; width: 18px;"></i>
                 <input type="text" 
-                       id="inputBuscarIncidencia" 
-                       onkeyup="filtrarIncidencias()" 
-                       placeholder="Buscar por estudiante, correo, laboratorio o código de incidencia..." 
+                       name="buscar" 
+                       th:value="${buscar}"
+                       placeholder="Buscar por estudiante, código, laboratorio o motivo (todas las fechas)..." 
                        style="width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; border-radius: 10px; border: 1px solid #cbd5e1; outline: none; font-size: 0.9rem; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
             </div>
-        </div>
+            
+            <button type="submit" style="background: #2563eb; color: white; border: none; padding: 0 1.5rem; border-radius: 10px; font-weight: 600; cursor: pointer;">
+                Buscar
+            </button>
+            
+            <a th:if="${buscar != null and !buscar.isEmpty()}" 
+               th:href="@{/admin/incidencias(fecha=${fechaConsulta})}" 
+               style="background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; padding: 0 1rem; border-radius: 10px; font-weight: 600; display: flex; align-items: center; text-decoration: none;">
+                Limpiar
+            </a>
+        </form>
 
         <!-- ======================================================= -->
         <!-- SECCIÓN 1: TODAS LAS INCIDENCIAS ACTIVAS (GLOBALES)     -->
@@ -275,44 +288,5 @@
   <script th:src="@{/js/admin-incidencias.js}"></script>
   <!-- SCRIPTS DEL TOPBAR (necesario para la campanita) -->
   <div th:replace="~{fragments/topbar-admin :: scripts}"></div>
-
-  <!-- SCRIPT PARA FILTRAR INCIDENCIAS -->
-  <script>
-    function filtrarIncidencias() {
-        const textoBusqueda = document.getElementById('inputBuscarIncidencia').value.toLowerCase().trim();
-        
-        // Filtramos las Activas
-        const tarjetasActivas = document.querySelectorAll('#contenedorIncidenciasActivas .tarjeta-incidencia-filtro');
-        let activasVisibles = 0;
-        tarjetasActivas.forEach(tarjeta => {
-            if (coincide(tarjeta, textoBusqueda)) {
-                tarjeta.style.display = ''; activasVisibles++;
-            } else {
-                tarjeta.style.display = 'none';
-            }
-        });
-
-        // Filtramos el Historial
-        const tarjetasHistorial = document.querySelectorAll('#contenedorIncidenciasHistorial .tarjeta-incidencia-filtro');
-        let historialVisibles = 0;
-        tarjetasHistorial.forEach(tarjeta => {
-            if (coincide(tarjeta, textoBusqueda)) {
-                tarjeta.style.display = ''; historialVisibles++;
-            } else {
-                tarjeta.style.display = 'none';
-            }
-        });
-    }
-
-    function coincide(tarjeta, texto) {
-        if (texto === "") return true;
-        const estudiante = tarjeta.querySelector('.dato-estudiante')?.innerText.toLowerCase() || "";
-        const laboratorio = tarjeta.querySelector('.dato-lab')?.innerText.toLowerCase() || "";
-        const codigo = tarjeta.querySelector('.dato-codigo')?.innerText.toLowerCase() || "";
-        const correo = tarjeta.querySelector('.col-meta-inc:nth-child(3) .val-meta-txt')?.innerText.toLowerCase() || "";
-        
-        return estudiante.includes(texto) || laboratorio.includes(texto) || codigo.includes(texto) || correo.includes(texto);
-    }
-</script>
 </body>
 </html>
