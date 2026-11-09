@@ -32,13 +32,23 @@
           </div>
         </div>
 
+        <!-- BARRA DE BÚSQUEDA -->
+        <div style="margin-bottom: 1.5rem; position: relative; max-width: 500px;">
+            <i data-lucide="search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; width: 18px;"></i>
+            <input type="text" 
+                   id="inputBuscarReserva" 
+                   onkeyup="filtrarReservas()" 
+                   placeholder="Buscar por estudiante, laboratorio o código..." 
+                   style="width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; border-radius: 10px; border: 1px solid #cbd5e1; outline: none; font-size: 0.9rem; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+        </div>
+
         <!-- LISTA DE INSPECCIONES -->
         <div id="contenedorInspeccion" 
              class="lista-tarjetas-checkin" 
              th:style="${#lists.isEmpty(inspecciones)} ? 'display:none;' : 'display:flex;'">
           
           <div th:each="ins : ${inspecciones}" 
-               class="tarjeta-reserva-checkin-fila" 
+               class="tarjeta-reserva-checkin-fila tarjeta-reserva-filtro" 
                th:id="'tarjeta-inspeccion-' + ${ins.idReserva}">
             
             <div class="icono-cuadro-checkin" th:classappend="${#strings.containsIgnoreCase(ins.laboratorio, 'Física') ? 'bg-rayo' : 'bg-quimica'}">
@@ -48,7 +58,7 @@
 
             <div class="info-central-checkin">
               <div class="fila-nombre-estado">
-                <strong class="nombre-lab-checkin" th:text="${ins.laboratorio}">Lab. Química</strong>
+                <strong class="nombre-lab-checkin dato-lab" th:text="${ins.laboratorio}">Lab. Química</strong>
                 <span class="badge-estado-pill" 
                       th:classappend="${ins.estado == 'INSPECCIONADA' ? 'estado-inspeccionada' : (ins.estado == 'CON_INCIDENCIA' ? 'estado-incidencia' : 'estado-devuelta')}"
                       th:text="${ins.estado == 'INSPECCIONADA' ? 'Inspeccionada (OK)' : (ins.estado == 'CON_INCIDENCIA' ? 'Con Incidencia' : 'En Uso / Devuelta')}">
@@ -61,16 +71,16 @@
               </div>
               
               <div class="pills-integrantes-flex">
-                <span th:each="integ : ${ins.integrantes}" class="pill-integrante-nombre" th:text="${integ}">
+                <span th:each="integ : ${ins.integrantes}" class="pill-integrante-nombre dato-estudiante" th:text="${integ}">
                   Mariafernanda Bruno Santos
                 </span>
               </div>
             </div>
 
             <div class="accion-derecha-checkin">
-              <span class="codigo-reserva-checkin" th:text="${ins.idReserva}">R-001</span>
+              <span class="codigo-reserva-checkin dato-codigo" th:text="${ins.idReserva}">R-001</span>
               
-              <!-- NUEVA INFO: Quién hizo la inspección y a qué hora -->
+              <!-- INFO: Quién hizo la inspección y a qué hora -->
               <div th:if="${ins.nombreEncargado != null}" style="text-align: right; margin-bottom: 5px;">
                   <div style="font-size: 12px; color: #10b981; font-weight: 700;">
                       <i data-lucide="check-circle" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle;"></i> 
@@ -86,7 +96,7 @@
                   <span th:if="${ins.estado == 'DEVUELTA'}">Pendiente de inspección</span>
               </div>
 
-              <!-- Botón Ver Resumen (solo si ya fue inspeccionada) -->
+              <!-- Botón Ver Resumen -->
               <button th:if="${ins.estado == 'INSPECCIONADA' or ins.estado == 'CON_INCIDENCIA'}"
                       type="button" 
                       class="btn-verde-iniciar" 
@@ -114,5 +124,25 @@
 
   <div th:replace="~{fragments/scripts}"></div>
   <script th:src="@{/js/admin-inspeccion.js}"></script>
+
+  <!-- SCRIPT PARA FILTRAR RESERVAS -->
+  <script>
+    function filtrarReservas() {
+        const texto = document.getElementById('inputBuscarReserva').value.toLowerCase().trim();
+        const tarjetas = document.querySelectorAll('.tarjeta-reserva-filtro');
+
+        tarjetas.forEach(tarjeta => {
+            const estudiantes = tarjeta.querySelector('.dato-estudiante')?.innerText.toLowerCase() || "";
+            const codigo = tarjeta.querySelector('.dato-codigo')?.innerText.toLowerCase() || "";
+            const laboratorio = tarjeta.querySelector('.dato-lab')?.innerText.toLowerCase() || "";
+
+            if (texto === "" || estudiantes.includes(texto) || codigo.includes(texto) || laboratorio.includes(texto)) {
+                tarjeta.style.display = '';
+            } else {
+                tarjeta.style.display = 'none';
+            }
+        });
+    }
+  </script>
 </body>
 </html>

@@ -986,12 +986,19 @@ public class AlumnoPortalController {
         return notificaciones;
     }
     
-    @GetMapping("/faq")
-    public String verFaq(HttpSession sesion) {
+        @GetMapping("/faq")
+    public String verFaq(HttpSession sesion, Model modelo) {
         // Verificamos que el alumno haya iniciado sesión
-        if (sesion.getAttribute("usuarioLogueado") == null) {
+        Object usuario = sesion.getAttribute("usuarioLogueado");
+        if (usuario == null) {
             return "redirect:/login";
         }
+        
+        // 👇 Le pasamos el alumno al modelo para que el topbar lo muestre 👇
+        Alumno alumno = (Alumno) usuario;
+        modelo.addAttribute("alumno", alumno);
+        modelo.addAttribute("numIncidencias", sancionRepositorio.findByAlumno_IdEstudAndEstado(alumno.getIdEstud(), "PENDIENTE").size());
+        
         return "alumno/faq";
     }
 

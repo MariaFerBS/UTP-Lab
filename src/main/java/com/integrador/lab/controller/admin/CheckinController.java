@@ -49,83 +49,86 @@ public class CheckinController {
     @Autowired
     private SancionRepository sancionRepositorio;
 
-    // 1. VISTA PRINCIPAL DE CHECK-IN (CON FILTRO POR FECHA)
+    // 1. VISTA PRINCIPAL DE CHECK-IN
     @GetMapping
-@Transactional(readOnly = true)
-public String verCheckin(
-        @RequestParam(required = false) String fecha,
-        HttpSession sesion, 
-        Model modelo) {
-        // 1. Calcular fecha de consulta usando String para evitar conflictos
-        String fechaConsultaStr = (fecha != null && !fecha.isEmpty()) ? fecha : java.time.LocalDate.now().toString();
-        
-                // Declaramos e inicializamos la variable de una vez
+    @Transactional(readOnly = true)
+    public String verCheckin(
+            @RequestParam(required = false) String fecha,
+            HttpSession sesion,
+            Model modelo) {
+
         java.time.LocalDate fechaConsulta = java.time.LocalDate.now();
-        
         try {
             if (fecha != null && !fecha.isEmpty()) {
                 fechaConsulta = java.time.LocalDate.parse(fecha);
             }
         } catch (Exception e) {
-            // Si falla el parseo, se queda con el valor de hoy que ya asignamos arriba
-            fechaConsulta = java.time.LocalDate.now(); 
+            fechaConsulta = java.time.LocalDate.now();
         }
 
-    
-        // 👇 CREAMOS LA VARIABLE FINAL AQUÍ 👇
         final java.time.LocalDate fechaFinal = fechaConsulta;
 
-        // 2. Traer TODAS las reservas de esa fecha (historial completo)
         List<Reserva> todas = reservaRepositorio.findAll().stream()
-                .filter(r -> r.getFechaReserva() != null && r.getFechaReserva().equals(fechaFinal)) // 👈 USAMOS fechaFinal
+                .filter(r -> r.getFechaReserva() != null && r.getFechaReserva().equals(fechaFinal))
                 .filter(r -> !"CANCELADA".equalsIgnoreCase(r.getEstado()))
                 .sorted((a, b) -> b.getIdReserva().compareTo(a.getIdReserva()))
                 .toList();
-    // 3. Armar la lista de DTOs
-    List<CheckinReservaDto> listaCheckin = new ArrayList<>();
 
-    for (Reserva r : todas) {
-        List<ReservaIntegrante> integrantes = reservaIntegranteRepositorio.findByReserva_IdReserva(r.getIdReserva());
-        List<String> nombresIntegrantes = new ArrayList<>();
-        for (ReservaIntegrante ri : integrantes) {
-            if (ri.getAlumno() != null) {
-                nombresIntegrantes.add(ri.getAlumno().getNombre() + " " + ri.getAlumno().getApellido());
+        List<CheckinReservaDto> listaCheckin = new ArrayList<>();
+
+        for (Reserva r : todas) {
+            List<ReservaIntegrante> integrantes = reservaIntegranteRepositorio.findByReserva_IdReserva(r.getIdReserva());
+            List<String> nombresIntegrantes = new ArrayList<>();
+            for (ReservaIntegrante ri : integrantes) {
+                if (ri.getAlumno() != null) {
+                    nombresIntegrantes.add(ri.getAlumno().getNombre() + " " + ri.getAlumno().getApellido());
+                }
             }
+
+            String labNombre = (r.getLaboratorio() != null) ? r.getLaboratorio().getNombre() : "Laboratorio";
+            String cubiculo = (r.getLaboratorio() != null && r.getLaboratorio().getUbicacionCubiculo() != null)
+                    ? r.getLaboratorio().getUbicacionCubiculo() : "S/C";
+            String tipoLab = (r.getLaboratorio() != null && r.getLaboratorio().getTipo() != null)
+                    ? r.getLaboratorio().getTipo() : "Química";
+
+            String horario = (r.getHoraInicio() != null && r.getHoraFin() != null)
+                    ? r.getHoraInicio() + "–" + r.getHoraFin() : "09:00–11:00";
+
+            // 👇 OBTENEMOS EL NOMBRE DEL ENCARGADO Y LA HORA 👇
+            String nombreEncargado = null;
+            String horaAccion = null;
+
+            if (r.getEncargadoCheckin() != null) {
+                nombreEncargado = r.getEncargadoCheckin().getNombre() + " " + r.getEncargadoCheckin().getApellido();
+            }
+            if (r.getFechaHoraCheckin() != null) {
+                horaAccion = r.getFechaHoraCheckin().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
+            }
+            // 👆 FIN 👆
+
+            listaCheckin.add(new CheckinReservaDto(
+                    r.getIdReserva(),
+                    labNombre,
+                    tipoLab,
+                    cubiculo,
+                    (r.getFechaReserva() != null ? r.getFechaReserva().toString() : ""),
+                    horario,
+                    r.getEstado(),
+                    nombresIntegrantes,
+                    nombreEncargado, // Se lo pasamos al DTO
+                    horaAccion       // Se lo pasamos al DTO
+            ));
         }
 
-        String labNombre = (r.getLaboratorio() != null) ? r.getLaboratorio().getNombre() : "Laboratorio";
-        String cubiculo = (r.getLaboratorio() != null && r.getLaboratorio().getUbicacionCubiculo() != null)
-                ? r.getLaboratorio().getUbicacionCubiculo() : "S/C";
-        String tipoLab = (r.getLaboratorio() != null && r.getLaboratorio().getTipo() != null)
-                ? r.getLaboratorio().getTipo() : "Química";
+        modelo.addAttribute("reservas", listaCheckin);
+        modelo.addAttribute("fechaConsulta", fechaConsulta.toString());
+        modelo.addAttribute("fechaAnterior", fechaConsulta.minusDays(1).toString());
+        modelo.addAttribute("fechaSiguiente", fechaConsulta.plusDays(1).toString());
 
-        String horario = (r.getHoraInicio() != null && r.getHoraFin() != null)
-                ? r.getHoraInicio() + "–" + r.getHoraFin() : "09:00–11:00";
-
-        listaCheckin.add(new CheckinReservaDto(
-                r.getIdReserva(),
-                labNombre,
-                tipoLab,
-                cubiculo,
-                (r.getFechaReserva() != null ? r.getFechaReserva().toString() : ""),
-                horario,
-                r.getEstado(),
-                nombresIntegrantes
-        ));
+        return "admin/checkin";
     }
 
-    
-    modelo.addAttribute("reservas", listaCheckin);
-    
-
-    modelo.addAttribute("fechaConsulta", fechaConsulta.toString());
-    modelo.addAttribute("fechaAnterior", fechaConsulta.minusDays(1).toString());
-    modelo.addAttribute("fechaSiguiente", fechaConsulta.plusDays(1).toString());
-
-    return "admin/checkin";
-}
-
-    // 2. ENDPOINT JSON PARA CARGAR EL MODAL CON INTEGRANTES, INSUMOS Y EPPS
+    // 2. ENDPOINT JSON PARA EL MODAL
     @GetMapping("/api/{idReserva}")
     @ResponseBody
     @Transactional(readOnly = true)
@@ -139,7 +142,6 @@ public String verCheckin(
         List<ReservaIntegrante> integrantes = reservaIntegranteRepositorio.findByReserva_IdReserva(idReserva);
         List<ReservaItem> items = reservaItemRepositorio.findByReserva_IdReserva(idReserva);
 
-        // A. Integrantes
         List<IntegranteDetalleDto> listaEstudiantes = new ArrayList<>();
         for (ReservaIntegrante ri : integrantes) {
             if (ri.getAlumno() != null) {
@@ -155,7 +157,6 @@ public String verCheckin(
             }
         }
 
-        // B. Insumos y EPPs
         List<ItemDetalleDto> listaInsumos = new ArrayList<>();
         List<ItemDetalleDto> listaEpps = new ArrayList<>();
 
@@ -168,21 +169,13 @@ public String verCheckin(
                 String cat = (p.getCategoria() != null) ? p.getCategoria().trim().toUpperCase() : "";
                 String nom = p.getNombre();
                 String unidad = "und";
-                if (cat.contains("SOLVENTE") || cat.contains("REACTIVO")) {
-                    unidad = "mL";
-                } else if (cat.contains("POLVO")) {
-                    unidad = "g";
-                }
+                if (cat.contains("SOLVENTE") || cat.contains("REACTIVO")) unidad = "mL";
+                else if (cat.contains("POLVO")) unidad = "g";
 
                 if (cat.contains("EPP")) {
                     String emoji = "🥽";
-                    if (nom.toLowerCase().contains("bata")) {
-                        emoji = "🥼";
-                        tieneBata = true;
-                    }
-                    if (nom.toLowerCase().contains("gafa") || nom.toLowerCase().contains("lente")) {
-                        tieneGafas = true;
-                    }
+                    if (nom.toLowerCase().contains("bata")) { emoji = "🥼"; tieneBata = true; }
+                    if (nom.toLowerCase().contains("gafa") || nom.toLowerCase().contains("lente")) tieneGafas = true;
                     listaEpps.add(new ItemDetalleDto(p.getIdProducto(), nom, unidad, emoji));
                 } else {
                     listaInsumos.add(new ItemDetalleDto(p.getIdProducto(), nom, unidad, "📦"));
@@ -190,19 +183,14 @@ public String verCheckin(
             }
         }
 
-        // REGLA: Los EPPs sin costo obligatorios (Bata y Gafas) se incluyen para ingresar
-        if (!tieneBata) {
-            listaEpps.add(new ItemDetalleDto("EPP-OBL-1", "Bata de laboratorio", "und", "🥼"));
-        }
-        if (!tieneGafas) {
-            listaEpps.add(new ItemDetalleDto("EPP-OBL-2", "Gafas de seguridad", "und", "🥽"));
-        }
+        if (!tieneBata) listaEpps.add(new ItemDetalleDto("EPP-OBL-1", "Bata de laboratorio", "und", "🥼"));
+        if (!tieneGafas) listaEpps.add(new ItemDetalleDto("EPP-OBL-2", "Gafas de seguridad", "und", "🥽"));
 
         String horario = (r.getHoraInicio() != null && r.getHoraFin() != null)
                 ? r.getHoraInicio() + "–" + r.getHoraFin() : "09:00–11:00";
         String labNombre = (r.getLaboratorio() != null) ? r.getLaboratorio().getNombre() : "Laboratorio";
 
-                // 👇 NUEVO: Extraemos el nombre del encargado y la hora
+        // Datos del encargado para el JS
         String nombreEncargado = null;
         String horaAccion = null;
         if (r.getEncargadoCheckin() != null) {
@@ -213,20 +201,15 @@ public String verCheckin(
         }
 
         DetalleModalCheckinDto dto = new DetalleModalCheckinDto(
-                r.getIdReserva(),
-                labNombre,
-                horario,
-                listaEstudiantes,
-                listaInsumos,
-                listaEpps,
-                nombreEncargado, // 👈 Lo pasamos al DTO
-                horaAccion       // 👈 Lo pasamos al DTO
+                r.getIdReserva(), labNombre, horario,
+                listaEstudiantes, listaInsumos, listaEpps,
+                nombreEncargado, horaAccion // 👈 Agregados al DTO del modal
         );
 
         return ResponseEntity.ok(dto);
     }
 
-    // 3. CONFIRMAR CHECK-IN VÍA ASÍNCRONA (CAMBIO A "EN_USO")
+    // 3. CONFIRMAR CHECK-IN (Se deja por compatibilidad, aunque el admin ya no lo usa)
     @PostMapping("/confirmar/{idReserva}")
     @ResponseBody
     @Transactional
@@ -240,14 +223,12 @@ public String verCheckin(
         r.setEstado("EN_USO");
         reservaRepositorio.save(r);
 
-        // Integrantes marcados como asistidos
         List<ReservaIntegrante> integrantes = reservaIntegranteRepositorio.findByReserva_IdReserva(idReserva);
         for (ReservaIntegrante ri : integrantes) {
             ri.setAsistio(true);
             reservaIntegranteRepositorio.save(ri);
         }
 
-        // Ítems marcados como entregados
         List<ReservaItem> items = reservaItemRepositorio.findByReserva_IdReserva(idReserva);
         for (ReservaItem it : items) {
             it.setDevuelto(true);
@@ -257,9 +238,10 @@ public String verCheckin(
         return ResponseEntity.ok(Collections.singletonMap("status", "ok"));
     }
 
-    // DTOs Auxiliares
+    // =========================================================================
+    // DTOs AUXILIARES (Aquí estaba el error, faltaban las variables)
+    // =========================================================================
     public static class CheckinReservaDto {
-
         private String idReserva;
         private String laboratorio;
         private String tipoLab;
@@ -268,8 +250,10 @@ public String verCheckin(
         private String horario;
         private String estado;
         private List<String> integrantes;
+        private String nombreEncargado; // 👈 AGREGADO
+        private String horaAccion;      // 👈 AGREGADO
 
-        public CheckinReservaDto(String idReserva, String laboratorio, String tipoLab, String cubiculo, String fecha, String horario, String estado, List<String> integrantes) {
+        public CheckinReservaDto(String idReserva, String laboratorio, String tipoLab, String cubiculo, String fecha, String horario, String estado, List<String> integrantes, String nombreEncargado, String horaAccion) {
             this.idReserva = idReserva;
             this.laboratorio = laboratorio;
             this.tipoLab = tipoLab;
@@ -278,6 +262,8 @@ public String verCheckin(
             this.horario = horario;
             this.estado = estado;
             this.integrantes = integrantes;
+            this.nombreEncargado = nombreEncargado;
+            this.horaAccion = horaAccion;
         }
 
         public String getIdReserva() { return idReserva; }
@@ -288,18 +274,19 @@ public String verCheckin(
         public String getHorario() { return horario; }
         public String getEstado() { return estado; }
         public List<String> getIntegrantes() { return integrantes; }
+        public String getNombreEncargado() { return nombreEncargado; } // 👈 GETTER AGREGADO
+        public String getHoraAccion() { return horaAccion; }           // 👈 GETTER AGREGADO
     }
 
     public static class DetalleModalCheckinDto {
-
-       private String idReserva;
+        private String idReserva;
         private String laboratorio;
         private String horario;
         private List<IntegranteDetalleDto> integrantes;
         private List<ItemDetalleDto> insumos;
         private List<ItemDetalleDto> epps;
-        private String nombreEncargado; // 👈 NUEVO
-        private String horaAccion;      // 👈 NUEVO
+        private String nombreEncargado; // 👈 AGREGADO
+        private String horaAccion;      // 👈 AGREGADO
 
         public DetalleModalCheckinDto(String idReserva, String laboratorio, String horario, List<IntegranteDetalleDto> integrantes, List<ItemDetalleDto> insumos, List<ItemDetalleDto> epps, String nombreEncargado, String horaAccion) {
             this.idReserva = idReserva;
@@ -312,7 +299,6 @@ public String verCheckin(
             this.horaAccion = horaAccion;
         }
 
-
         public String getIdReserva() { return idReserva; }
         public String getLaboratorio() { return laboratorio; }
         public String getHorario() { return horario; }
@@ -324,7 +310,6 @@ public String verCheckin(
     }
 
     public static class IntegranteDetalleDto {
-
         private String codigo;
         private String nombre;
         private String iniciales;
@@ -341,7 +326,6 @@ public String verCheckin(
     }
 
     public static class ItemDetalleDto {
-
         private String id;
         private String nombre;
         private String unidad;

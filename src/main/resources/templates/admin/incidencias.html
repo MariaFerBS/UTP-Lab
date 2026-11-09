@@ -279,28 +279,40 @@
   <!-- SCRIPT PARA FILTRAR INCIDENCIAS -->
   <script>
     function filtrarIncidencias() {
-        // Obtenemos el texto que el usuario escribió en minúsculas
-        const textoBusqueda = document.getElementById('inputBuscarIncidencia').value.toLowerCase();
+        const textoBusqueda = document.getElementById('inputBuscarIncidencia').value.toLowerCase().trim();
         
-        // Obtenemos todas las tarjetas de incidencia (tanto activas como del historial)
-        const tarjetas = document.querySelectorAll('.tarjeta-incidencia-filtro');
-
-        tarjetas.forEach(tarjeta => {
-            // Extraemos el texto de los datos clave
-            const estudiante = tarjeta.querySelector('.dato-estudiante')?.innerText.toLowerCase() || "";
-            const laboratorio = tarjeta.querySelector('.dato-lab')?.innerText.toLowerCase() || "";
-            const codigo = tarjeta.querySelector('.dato-codigo')?.innerText.toLowerCase() || "";
-            // También buscamos en el correo por si el usuario escribe el código del alumno
-            const correo = tarjeta.querySelector('.col-meta-inc:nth-child(3) .val-meta-txt')?.innerText.toLowerCase() || "";
-
-            // Verificamos si el texto de búsqueda coincide con algún campo
-            if (estudiante.includes(textoBusqueda) || laboratorio.includes(textoBusqueda) || codigo.includes(textoBusqueda) || correo.includes(textoBusqueda)) {
-                tarjeta.style.display = ''; // Lo mostramos
+        // Filtramos las Activas
+        const tarjetasActivas = document.querySelectorAll('#contenedorIncidenciasActivas .tarjeta-incidencia-filtro');
+        let activasVisibles = 0;
+        tarjetasActivas.forEach(tarjeta => {
+            if (coincide(tarjeta, textoBusqueda)) {
+                tarjeta.style.display = ''; activasVisibles++;
             } else {
-                tarjeta.style.display = 'none'; // Lo ocultamos
+                tarjeta.style.display = 'none';
+            }
+        });
+
+        // Filtramos el Historial
+        const tarjetasHistorial = document.querySelectorAll('#contenedorIncidenciasHistorial .tarjeta-incidencia-filtro');
+        let historialVisibles = 0;
+        tarjetasHistorial.forEach(tarjeta => {
+            if (coincide(tarjeta, textoBusqueda)) {
+                tarjeta.style.display = ''; historialVisibles++;
+            } else {
+                tarjeta.style.display = 'none';
             }
         });
     }
-  </script>
+
+    function coincide(tarjeta, texto) {
+        if (texto === "") return true;
+        const estudiante = tarjeta.querySelector('.dato-estudiante')?.innerText.toLowerCase() || "";
+        const laboratorio = tarjeta.querySelector('.dato-lab')?.innerText.toLowerCase() || "";
+        const codigo = tarjeta.querySelector('.dato-codigo')?.innerText.toLowerCase() || "";
+        const correo = tarjeta.querySelector('.col-meta-inc:nth-child(3) .val-meta-txt')?.innerText.toLowerCase() || "";
+        
+        return estudiante.includes(texto) || laboratorio.includes(texto) || codigo.includes(texto) || correo.includes(texto);
+    }
+</script>
 </body>
 </html>
