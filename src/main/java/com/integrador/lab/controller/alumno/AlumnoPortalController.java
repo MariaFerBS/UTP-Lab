@@ -41,6 +41,7 @@ import com.integrador.lab.repository.ReservaRepository;
 import com.integrador.lab.repository.SancionRepository;
 import com.integrador.lab.service.EmailService;
 import com.integrador.lab.service.PagoSimulacionService;
+import com.integrador.lab.service.ReporteService;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -77,6 +78,9 @@ public class AlumnoPortalController {
 
     @Autowired 
     private PagoSimulacionService pagoSimulacionService;
+
+    @Autowired
+    private ReporteService boletaPdfService;
 
     // =========================================================================
     // 1. PANTALLA PRINCIPAL: LABORATORIOS Y GESTIÓN DE RESERVAS
@@ -126,9 +130,7 @@ public class AlumnoPortalController {
             if (r == null || r.getFechaReserva() == null || !hoy.equals(r.getFechaReserva())) continue;
 
             String estado = r.getEstado() == null ? "" : r.getEstado().trim().toUpperCase();
-            // Solo contamos las que no están canceladas
             if (!estado.equals("CANCELADA")) {
-                // Usamos una lista para guardar los IDs y evitar duplicados si el alumno se puso 2 veces
                 if (!idsReservasHoy.contains(r.getIdReserva())) {
                     idsReservasHoy.add(r.getIdReserva());
                 }
@@ -141,7 +143,6 @@ public class AlumnoPortalController {
         modelo.addAttribute("reservasHoy", reservasHoy);
         modelo.addAttribute("reservasRestantes", reservasRestantes);
         modelo.addAttribute("limiteDiarioAlcanzado", reservasHoy >= 2);
-        // 👆 FIN LÓGICA CONTADOR 👆
 
         List<ReservaActivaDto> misReservas = new ArrayList<>();
         for (ReservaIntegrante ri : participaciones) {
@@ -311,7 +312,6 @@ public class AlumnoPortalController {
         // B. Validar integrantes (Y evitar duplicar al creador)
         if (codigosIntegrantes != null) {
             for (String codIntegrante : codigosIntegrantes) {
-                // 👇 SI EL CÓDIGO ES EL MISMO DEL ALUMNO LOGUEADO, LO IGNORAMOS 👇
                 if (codIntegrante.trim().equalsIgnoreCase(alumnoLogueado.getIdEstud().trim())) continue;
 
                 List<ReservaIntegrante> participacionesIntegrante = reservaIntegranteRepositorio.findByAlumno_IdEstud(codIntegrante.trim());
@@ -379,10 +379,9 @@ public class AlumnoPortalController {
         ReservaIntegrante responsable = new ReservaIntegrante(nuevaReserva, alumnoLogueado, false);
         reservaIntegranteRepositorio.save(responsable);
 
-        // C. Guardar Integrantes (Corregido para no duplicar)
+        // C. Guardar Integrantes
         if (codigosIntegrantes != null) {
             for (String cod : codigosIntegrantes) {
-                // 👇 ESTA ES LA CORRECCIÓN CLAVE 👇
                 if (!cod.trim().equalsIgnoreCase(alumnoLogueado.getIdEstud().trim())) {
                     Alumno integrante = alumnoRepositorio.findById(cod.trim()).orElse(null);
                     
@@ -436,7 +435,7 @@ public class AlumnoPortalController {
         );
         boletaRepositorio.save(boleta);
 
-        // ⭐ ENVIAR CORREO DE CONFIRMACIÓN (CON DETALLE DE BOLETA SI HAY PAGO)
+                // ⭐ ENVIAR CORREO DE CONFIRMACIÓN CON PDF ADJUNTO
         try {
             String correoDestino = alumnoLogueado.getIdEstud().toLowerCase() + "@utp.edu.pe";
             String asunto;
@@ -445,43 +444,20 @@ public class AlumnoPortalController {
             if (montoTotal.compareTo(BigDecimal.ZERO) > 0) {
                 asunto = "🧾 Boleta de Pago - Reserva Confirmada - UTP +Lab";
                 
-                StringBuilder detalleItems = new StringBuilder();
-                if (insumosIds != null && !insumosIds.isEmpty()) {
-                    detalleItems.append("\n📦 INSUMOS PRESTADOS:\n");
-                    for (String idInsumo : insumosIds) {
-                        productoRepositorio.findById(idInsumo).ifPresent(p -> 
-                            detalleItems.append("   - ").append(p.getNombre()).append("\n")
-                        );
-                    }
-                }
-                if (eppsIds != null && !eppsIds.isEmpty()) {
-                    detalleItems.append("\n🦺 EQUIPOS DE PROTECCIÓN (EPPs):\n");
-                    for (String idEpp : eppsIds) {
-                        productoRepositorio.findById(idEpp).ifPresent(p -> 
-                            detalleItems.append("   - ").append(p.getNombre()).append("\n")
-                        );
-                    }
-                }
-
                 mensaje = "Hola " + alumnoLogueado.getNombre() + ",\n\n" +
-                        "Tu reserva ha sido confirmada y tu pago ha sido procesado exitosamente.\n\n" +
-                        "═══════════════════════════════════════\n" +
-                        "🧾 BOLETA DE PAGO\n" +
-                        "═══════════════════════════════════════\n" +
-                        "Código de Boleta: " + idBoleta + "\n" +
-                        "Código de Reserva: " + idReserva + "\n" +
-                        "Laboratorio: " + lab.getNombre() + " (" + lab.getUbicacionCubiculo() + ")\n" +
-                        "Fecha: " + fecha + "\n" +
-                        "Horario: " + horaInicio + " - " + horaFin + "\n" +
-                        detalleItems.toString() + "\n" +
-                        "───────────────────────────────────────\n" +
-                        "💳 MÉTODO DE PAGO: " + metodoPago.toUpperCase() + "\n" +
-                        "💰 TOTAL PAGADO: S/ " + montoTotal.setScale(2) + "\n" +
-                        "═══════════════════════════════════════\n\n" +
-                        "Gracias por tu pago. Recuerda llegar 10 minutos antes para tu check-in.\n\n" +
+                        "ES UNA PRUEBA Tu reserva ha sido confirmada y tu pago ha sido procesado exitosamente.\n\n" +
+                        "Adjunto a este correo encontrarás tu boleta en formato PDF.\n" +
+                        "Recuerda llegar 10 minutos antes para tu check-in.\n\n" +
                         "Atentamente,\nEl equipo de UTP +Lab";
+
+                // Generamos el PDF
+                byte[] pdfBytes = boletaPdfService.generarPdfBoleta(boleta, nuevaReserva).readAllBytes();
+                
+                // Enviamos el correo con el PDF adjunto usando Brevo
+                emailService.enviarCorreoConAdjunto(correoDestino, asunto, mensaje, pdfBytes, "Boleta_" + idBoleta + ".pdf");
+                
             } else {
-                asunto = "✅ Confirmación de Reserva - UTP +Lab";
+                asunto = "ES UN CORREO DE PRUEBA ✅ Confirmación de Reserva - UTP +Lab";
                 mensaje = "Hola " + alumnoLogueado.getNombre() + ",\n\n" +
                         "Tu reserva en " + lab.getNombre() + " (" + lab.getUbicacionCubiculo() + ") ha sido confirmada.\n\n" +
                         "Fecha: " + fecha + "\n" +
@@ -489,9 +465,11 @@ public class AlumnoPortalController {
                         "Código de Reserva: " + idReserva + "\n\n" +
                         "Recuerda llegar 10 minutos antes para tu check-in.\n\n" +
                         "Atentamente,\nEl equipo de UTP +Lab";
+                
+                // Si es gratis, enviamos el correo normal (sin adjunto)
+                emailService.enviarCorreo(correoDestino, asunto, mensaje);
             }
 
-            emailService.enviarCorreo(correoDestino, asunto, mensaje);
             System.out.println("✅ Correo enviado a: " + correoDestino + " | Asunto: " + asunto);
         } catch (Exception e) {
             System.out.println("❌ Error al enviar correo: " + e.getMessage());
@@ -922,10 +900,10 @@ public class AlumnoPortalController {
         reserva.setEstado("CANCELADA");
         reservaRepositorio.save(reserva);
 
-        // ⭐ ENVIAR CORREO DE CANCELACIÓN
+        // ⭐ ENVIAR CORREO DE CANCELACIÓN AL ALUMNO
         try {
             String correoDestino = alumno.getIdEstud().toLowerCase() + "@utp.edu.pe";
-            String asunto = "❌ Reserva Cancelada - UTP +Lab";
+            String asunto = "ES UNA CORREO DE PRUEBA ❌ Reserva Cancelada - UTP +Lab";
             String mensaje = "Hola " + alumno.getNombre() + ",\n\n" +
                     "Te confirmamos que tu reserva en " + reserva.getLaboratorio().getNombre() + 
                     " (" + reserva.getLaboratorio().getUbicacionCubiculo() + ") ha sido cancelada exitosamente.\n\n" +
@@ -939,6 +917,34 @@ public class AlumnoPortalController {
             System.out.println("✅ Correo de cancelación enviado a: " + correoDestino);
         } catch (Exception e) {
             System.out.println("❌ Error al enviar correo de cancelación: " + e.getMessage());
+        }
+
+        // ⭐ ENVIAR CORREO DE CANCELACIÓN AL ENCARGADO DEL LABORATORIO
+        try {
+            if (reserva.getLaboratorio() != null && reserva.getLaboratorio().getEncargado() != null) {
+                com.integrador.lab.modelo.Encargado enc = reserva.getLaboratorio().getEncargado();
+                
+                // Usamos la misma lógica de mapeo de correos para tus pruebas
+                String correoEncargado = enc.getIdEncargado().toLowerCase() + "@utp.edu.pe";
+                if ("E45985625".equals(enc.getIdEncargado())) correoEncargado = "U24225302@utp.edu.pe";
+                if ("E45985626".equals(enc.getIdEncargado())) correoEncargado = "U24204158@utp.edu.pe";
+
+                String asuntoEnc = "⚠️ Alerta: Estudiante ha cancelado su reserva (" + reserva.getIdReserva() + ")";
+                String mensajeEnc = "Hola " + enc.getNombre() + ",\n\n" +
+                        "Te informamos que el estudiante " + alumno.getNombre() + " " + alumno.getApellido() + 
+                        " ha cancelado su reserva para el laboratorio que tienes a cargo.\n\n" +
+                        "Laboratorio: " + reserva.getLaboratorio().getNombre() + " (" + reserva.getLaboratorio().getUbicacionCubiculo() + ")\n" +
+                        "Código de Reserva: " + reserva.getIdReserva() + "\n" +
+                        "Fecha: " + reserva.getFechaReserva() + "\n" +
+                        "Horario liberado: " + reserva.getHoraInicio() + " - " + reserva.getHoraFin() + "\n\n" +
+                        "El horario ha quedado libre en el sistema.\n\n" +
+                        "Atentamente,\nEl sistema de UTP +Lab";
+
+                emailService.enviarCorreo(correoEncargado, asuntoEnc, mensajeEnc);
+                System.out.println("✅ Correo de cancelación enviado al Encargado: " + correoEncargado);
+            }
+        } catch (Exception e) {
+            System.out.println("❌ Error al enviar correo al Encargado: " + e.getMessage());
         }
 
         redirectAttributes.addFlashAttribute("mensajeCancelacion", "La reserva " + idReserva + " fue cancelada correctamente.");
@@ -988,13 +994,11 @@ public class AlumnoPortalController {
     
         @GetMapping("/faq")
     public String verFaq(HttpSession sesion, Model modelo) {
-        // Verificamos que el alumno haya iniciado sesión
         Object usuario = sesion.getAttribute("usuarioLogueado");
         if (usuario == null) {
             return "redirect:/login";
         }
         
-        // 👇 Le pasamos el alumno al modelo para que el topbar lo muestre 👇
         Alumno alumno = (Alumno) usuario;
         modelo.addAttribute("alumno", alumno);
         modelo.addAttribute("numIncidencias", sancionRepositorio.findByAlumno_IdEstudAndEstado(alumno.getIdEstud(), "PENDIENTE").size());

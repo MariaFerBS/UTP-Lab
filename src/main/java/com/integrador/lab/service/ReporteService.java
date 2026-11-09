@@ -4,7 +4,10 @@ import com.lowagie.text.*;
 import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
+import com.integrador.lab.modelo.Boleta;
 import com.integrador.lab.modelo.Producto;
+import com.integrador.lab.modelo.Reserva;
+
 import org.springframework.stereotype.Service;
 
 import java.awt.Color;
@@ -137,6 +140,60 @@ public class ReporteService {
             document.close();
 
         } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return new ByteArrayInputStream(out.toByteArray());
+    }
+
+    public ByteArrayInputStream generarPdfBoleta(Boleta boleta, Reserva reserva) {
+        Document document = new Document();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+        try {
+            PdfWriter.getInstance(document, out);
+            document.open();
+
+            Font tituloFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18);
+            Font subtituloFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12);
+            Font normalFont = FontFactory.getFont(FontFactory.HELVETICA, 11);
+            Font boldFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11);
+
+            Paragraph titulo = new Paragraph("UTP +Lab - Boleta de Pago", tituloFont);
+            titulo.setAlignment(Element.ALIGN_CENTER);
+            document.add(titulo);
+            document.add(Chunk.NEWLINE);
+
+            document.add(new Paragraph("Código de Boleta: " + boleta.getIdBoleta(), normalFont));
+            document.add(new Paragraph("Código de Reserva: " + reserva.getIdReserva(), normalFont));
+            document.add(new Paragraph("Fecha de Emisión: " + boleta.getFechaEmision().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")), normalFont));
+            document.add(Chunk.NEWLINE);
+
+            document.add(new Paragraph("DATOS DEL ESTUDIANTE", subtituloFont));
+            document.add(new Paragraph("Nombre: " + boleta.getAlumno().getNombre() + " " + boleta.getAlumno().getApellido(), normalFont));
+            document.add(new Paragraph("Código: " + boleta.getAlumno().getIdEstud(), normalFont));
+            document.add(Chunk.NEWLINE);
+
+            document.add(new Paragraph("DETALLES DE LA RESERVA", subtituloFont));
+            document.add(new Paragraph("Laboratorio: " + reserva.getLaboratorio().getNombre() + " (" + reserva.getLaboratorio().getUbicacionCubiculo() + ")", normalFont));
+            document.add(new Paragraph("Fecha: " + reserva.getFechaReserva().toString(), normalFont));
+            document.add(new Paragraph("Horario: " + reserva.getHoraInicio() + " - " + reserva.getHoraFin(), normalFont));
+            document.add(Chunk.NEWLINE);
+
+            document.add(new Paragraph("───────────────────────────────────────────", normalFont));
+            document.add(new Paragraph("Método de Pago: " + boleta.getTipoOperacion(), normalFont));
+            Paragraph total = new Paragraph("TOTAL PAGADO: S/ " + boleta.getTotal().setScale(2), boldFont);
+            total.setAlignment(Element.ALIGN_RIGHT);
+            document.add(total);
+            document.add(new Paragraph("───────────────────────────────────────────", normalFont));
+            
+            document.add(Chunk.NEWLINE);
+            Paragraph footer = new Paragraph("Gracias por usar UTP +Lab.", normalFont);
+            footer.setAlignment(Element.ALIGN_CENTER);
+            document.add(footer);
+
+            document.close();
+        } catch (DocumentException e) {
             e.printStackTrace();
         }
 

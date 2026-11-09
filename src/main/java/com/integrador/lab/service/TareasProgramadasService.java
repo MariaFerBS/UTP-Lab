@@ -28,102 +28,66 @@ public class TareasProgramadasService {
     @Autowired
     private EmailService emailService;
 
-    // 🔑 Zona horaria de Perú (UTC-5)
     private static final ZoneId ZONA_PERU = ZoneId.of("America/Lima");
 
-    // Tiempo de tolerancia en minutos después de la hora de inicio
-    private static final int MINUTOS_TOLERANCIA = 15;
-
-    // =========================================================================
-    // TAREA 1: CANCELAR RESERVAS NO ASISTIDAS (Las que se quedaron en CONFIRMADA)
-    // =========================================================================
+    // TAREAS 1, 2 y 3 (Se mantienen igual)
     @Scheduled(fixedRate = 60000, initialDelay = 10000)
     @Transactional
     public void cancelarReservasNoAsistidas() {
         LocalDate hoy = LocalDate.now(ZONA_PERU);
         LocalTime ahora = LocalTime.now(ZONA_PERU);
-
         List<Reserva> reservasConfirmadas = reservaRepository.findByEstado("CONFIRMADA");
 
-        int canceladas = 0;
         for (Reserva r : reservasConfirmadas) {
             if (r.getHoraInicio() == null) continue;
-
             boolean noAsistio = false;
 
-            // Si es de hoy, y pasaron más de 15 minutos
             if (r.getFechaReserva().equals(hoy)) {
-                LocalTime limiteTolerancia = r.getHoraInicio().plusMinutes(15);
-                if (ahora.isAfter(limiteTolerancia)) {
-                    noAsistio = true;
-                }
-            }
-            // Si es de días anteriores
-            else if (r.getFechaReserva().isBefore(hoy)) {
+                if (ahora.isAfter(r.getHoraInicio().plusMinutes(15))) noAsistio = true;
+            } else if (r.getFechaReserva().isBefore(hoy)) {
                 noAsistio = true;
             }
 
             if (noAsistio) {
                 r.setEstado("NO_ASISTIO");
                 reservaRepository.save(r);
-                canceladas++;
-                System.out.println("❌ " + r.getIdReserva() + " cancelada por NO ASISTIR.");
             }
         }
     }
 
-    // =========================================================================
-    // TAREA 2: EXPIRAR RESERVAS EN USO (Si pasó la hora y no hicieron checkout)
-    // =========================================================================
     @Scheduled(fixedRate = 60000)
     @Transactional
     public void expirarReservasAntiguas() {
         LocalDate hoy = LocalDate.now();
         LocalTime horaActual = LocalTime.now();
-        
         List<Reserva> candidatas = reservaRepository.findByEstadoAndFechaReservaLessThanEqual("EN_USO", hoy);
 
-        int contador = 0;
         for (Reserva reserva : candidatas) {
             boolean esDeDiasPasados = reserva.getFechaReserva().isBefore(hoy);
             boolean esDeHoyPeroYaTermino = reserva.getFechaReserva().isEqual(hoy) && reserva.getHoraFin().isBefore(horaActual);
-
             if (esDeDiasPasados || esDeHoyPeroYaTermino) {
                 reserva.setEstado("DEVUELTA");
                 reservaRepository.save(reserva);
-                contador++;
             }
-        }
-
-        if (contador > 0) {
-            System.out.println("⏰ [SCHEDULER] Se cerraron " + contador + " reservas.");
         }
     }
 
-    // =========================================================================
-    // TAREA 3: VENCER INSPECCIONES (Si el admin no revisó en 30 min)
-    // =========================================================================
     @Scheduled(fixedRate = 60000)
     @Transactional
     public void vencerInspecciones() {
         LocalDate hoy = LocalDate.now();
-
         List<Reserva> reservasPendientes = reservaRepository.findByEstadoAndFechaReservaLessThanEqual("DEVUELTA", hoy);
-        
         for (Reserva r : reservasPendientes) {
             LocalDateTime horaFin = LocalDateTime.of(r.getFechaReserva(), r.getHoraFin());
-            LocalDateTime limite = horaFin.plusMinutes(30);
-
-            if (LocalDateTime.now().isAfter(limite)) {
+            if (LocalDateTime.now().isAfter(horaFin.plusMinutes(30))) {
                 r.setEstado("NO_INSPECCIONADO");
                 reservaRepository.save(r);
-                System.out.println("⚠️ [SCHEDULER] Reserva " + r.getIdReserva() + " pasó a NO_INSPECCIONADO.");
             }
         }
     }
 
     // =========================================================================
-    // TAREA 4: ENVIAR RECORDATORIOS 15 MINUTOS ANTES (ENTRADA Y SALIDA)
+    // TAREA 4: ENVIAR RECORDATORIOS A ALUMNOS Y ENCARGADOS (CON CORREOS REALES)
     // =========================================================================
     @Scheduled(fixedRate = 60000, initialDelay = 15000)
     @Transactional(readOnly = true)
@@ -132,15 +96,10 @@ public class TareasProgramadasService {
         LocalTime ahora = LocalTime.now(ZONA_PERU);
         LocalDateTime ahoraCompleto = LocalDateTime.of(hoy, ahora);
 
-        // Buscamos todas las reservas de hoy que estén activas o confirmadas
         List<Reserva> reservasHoy = reservaRepository.findByFechaReserva(hoy);
 
         for (Reserva r : reservasHoy) {
-            // Solo enviamos correos si la reserva está CONFIRMADA o EN_USO
-            if (!"CONFIRMADA".equalsIgnoreCase(r.getEstado()) && !"EN_USO".equalsIgnoreCase(r.getEstado())) {
-                continue;
-            }
-
+            if (!"CONFIRMADA".equalsIgnoreCase(r.getEstado()) && !"EN_USO".equalsIgnoreCase(r.getEstado())) continue;
             if (r.getHoraInicio() == null || r.getHoraFin() == null) continue;
 
             LocalDateTime inicioReserva = LocalDateTime.of(r.getFechaReserva(), r.getHoraInicio());
@@ -149,62 +108,102 @@ public class TareasProgramadasService {
             long minutosParaInicio = ChronoUnit.MINUTES.between(ahoraCompleto, inicioReserva);
             long minutosParaFin = ChronoUnit.MINUTES.between(ahoraCompleto, finReserva);
 
-            // Recordatorio de ENTRADA: Faltan entre 14 y 15 minutos para el inicio
-            if (minutosParaInicio >= 14 && minutosParaInicio <= 15) {
-                enviarCorreoRecordatorioEntrada(r);
+            // 👇 15 MINUTOS ANTES DE ENTRAR
+            if (minutosParaInicio == 15) {
+                enviarCorreoEntrada(r, r.getLaboratorio().getEncargado());
             }
 
-            // Recordatorio de SALIDA: Faltan entre 14 y 15 minutos para el fin
-            if (minutosParaFin >= 14 && minutosParaFin <= 15) {
-                enviarCorreoRecordatorioSalida(r);
-            }
-        }
-    }
-
-    private void enviarCorreoRecordatorioEntrada(Reserva r) {
-        List<ReservaIntegrante> integrantes = reservaIntegranteRepositorio.findByReserva_IdReserva(r.getIdReserva());
-        for (ReservaIntegrante ri : integrantes) {
-            if (ri.getAlumno() != null) {
-                String correo = ri.getAlumno().getIdEstud().toLowerCase() + "@utp.edu.pe";
-                String asunto = "⏰ Recordatorio: Tu reserva empieza en 15 minutos - UTP +Lab";
-                String mensaje = "Hola " + ri.getAlumno().getNombre() + ",\n\n" +
-                        "Te recordamos que tu reserva en " + r.getLaboratorio().getNombre() + 
-                        " (" + r.getLaboratorio().getUbicacionCubiculo() + ") está por comenzar.\n\n" +
-                        "Fecha: " + r.getFechaReserva() + "\n" +
-                        "Horario: " + r.getHoraInicio() + " - " + r.getHoraFin() + "\n" +
-                        "Código: " + r.getIdReserva() + "\n\n" +
-                        "¡No llegues tarde!\n\n" +
-                        "Atentamente,\nEl equipo de UTP +Lab";
-                try {
-                    emailService.enviarCorreo(correo, asunto, mensaje);
-                    System.out.println("✅ Correo de ENTRADA enviado a: " + correo + " para la reserva " + r.getIdReserva());
-                } catch (Exception e) {
-                    System.out.println("❌ Error enviando correo de entrada: " + e.getMessage());
-                }
+            // 👇 10 MINUTOS ANTES DE SALIR
+            if (minutosParaFin == 10) {
+                enviarCorreoSalida(r, r.getLaboratorio().getEncargado());
             }
         }
     }
 
-    private void enviarCorreoRecordatorioSalida(Reserva r) {
+    // 👇 MÉTODO PARA OBTENER EL CORREO DEL ENCARGADO (Mapeo manual para pruebas) 👇
+    private String obtenerCorreoEncargado(com.integrador.lab.modelo.Encargado encargado) {
+        if (encargado == null) return null;
+        String id = encargado.getIdEncargado();
+        
+        // Si es Carlos Mendoza (E45985625), le llega a tu correo U24225302
+        if ("E45985625".equals(id)) {
+            return "U24225302@utp.edu.pe"; 
+        }
+        // Si es Lucía Fernandez (E45985626), le llega a tu compañera U24204158
+        if ("E45985626".equals(id)) {
+            return "U24204158@utp.edu.pe";
+        }
+        
+        // Por defecto (si no es ninguno de los de prueba), usamos el suyo
+        return id.toLowerCase() + "@utp.edu.pe";
+    }
+
+    private void enviarCorreoEntrada(Reserva r, com.integrador.lab.modelo.Encargado encargado) {
+        // 1. Enviar a los Alumnos
         List<ReservaIntegrante> integrantes = reservaIntegranteRepositorio.findByReserva_IdReserva(r.getIdReserva());
         for (ReservaIntegrante ri : integrantes) {
             if (ri.getAlumno() != null) {
                 String correo = ri.getAlumno().getIdEstud().toLowerCase() + "@utp.edu.pe";
-                String asunto = "⏰ Recordatorio: Tu reserva termina en 15 minutos - UTP +Lab";
+                String asunto = "ES UNA PRUEBA ⏰ Recordatorio: Tu reserva empieza en 15 minutos - UTP +Lab";
                 String mensaje = "Hola " + ri.getAlumno().getNombre() + ",\n\n" +
-                        "Te recordamos que tu reserva en " + r.getLaboratorio().getNombre() + 
-                        " (" + r.getLaboratorio().getUbicacionCubiculo() + ") está por finalizar.\n\n" +
-                        "Fecha: " + r.getFechaReserva() + "\n" +
-                        "Horario: " + r.getHoraInicio() + " - " + r.getHoraFin() + "\n" +
-                        "Código: " + r.getIdReserva() + "\n\n" +
+                        "Tu reserva en " + r.getLaboratorio().getNombre() + " está por comenzar.\n" +
+                        "Horario: " + r.getHoraInicio() + " - " + r.getHoraFin() + "\n\n" +
+                        "¡No llegues tarde!\n\nAtentamente,\nEl equipo de UTP +Lab";
+                try { emailService.enviarCorreo(correo, asunto, mensaje); } catch (Exception e) {}
+            }
+        }
+
+        // 2. Enviar al Encargado
+        if (encargado != null) {
+            String correoEnc = obtenerCorreoEncargado(encargado);
+            String asuntoEnc = "ES UNA PRUEBA ⏰ Aviso: Reserva próxima a iniciar (" + r.getIdReserva() + ")";
+            String mensajeEnc = "Hola " + encargado.getNombre() + ",\n\n" +
+                    "Te informamos que en 15 minutos iniciará una reserva en tu laboratorio.\n\n" +
+                    "Laboratorio: " + r.getLaboratorio().getNombre() + " (" + r.getLaboratorio().getUbicacionCubiculo() + ")\n" +
+                    "Código de Reserva: " + r.getIdReserva() + "\n" +
+                    "Horario: " + r.getHoraInicio() + " - " + r.getHoraFin() + "\n\n" +
+                    "Por favor, prepárate para recibir a los estudiantes y realizar el Check-in.\n\n" +
+                    "Atentamente,\nEl sistema de UTP +Lab";
+            try { 
+                emailService.enviarCorreo(correoEnc, asuntoEnc, mensajeEnc); 
+                System.out.println("✅ Correo de ENTRADA enviado al Encargado: " + correoEnc);
+            } catch (Exception e) { 
+                System.out.println("❌ Error correo Encargado: " + e.getMessage()); 
+            }
+        }
+    }
+
+    private void enviarCorreoSalida(Reserva r, com.integrador.lab.modelo.Encargado encargado) {
+        // 1. Enviar a los Alumnos
+        List<ReservaIntegrante> integrantes = reservaIntegranteRepositorio.findByReserva_IdReserva(r.getIdReserva());
+        for (ReservaIntegrante ri : integrantes) {
+            if (ri.getAlumno() != null) {
+                String correo = ri.getAlumno().getIdEstud().toLowerCase() + "@utp.edu.pe";
+                String asunto = "ES UNA PRUEBA ⏰ Recordatorio: Tu reserva termina en 10 minutos - UTP +Lab";
+                String mensaje = "Hola " + ri.getAlumno().getNombre() + ",\n\n" +
+                        "Tu reserva en " + r.getLaboratorio().getNombre() + " está por finalizar.\n" +
                         "Por favor, prepara tus materiales para la devolución.\n\n" +
                         "Atentamente,\nEl equipo de UTP +Lab";
-                try {
-                    emailService.enviarCorreo(correo, asunto, mensaje);
-                    System.out.println("✅ Correo de SALIDA enviado a: " + correo + " para la reserva " + r.getIdReserva());
-                } catch (Exception e) {
-                    System.out.println("❌ Error enviando correo de salida: " + e.getMessage());
-                }
+                try { emailService.enviarCorreo(correo, asunto, mensaje); } catch (Exception e) {}
+            }
+        }
+
+        // 2. Enviar al Encargado
+        if (encargado != null) {
+            String correoEnc = obtenerCorreoEncargado(encargado);
+            String asuntoEnc = "ES UNA PRUEBA⌛ Aviso: Reserva por terminar (" + r.getIdReserva() + ")";
+            String mensajeEnc = "Hola " + encargado.getNombre() + ",\n\n" +
+                    "Te informamos que la siguiente reserva finalizará en 10 minutos.\n\n" +
+                    "Laboratorio: " + r.getLaboratorio().getNombre() + " (" + r.getLaboratorio().getUbicacionCubiculo() + ")\n" +
+                    "Código de Reserva: " + r.getIdReserva() + "\n" +
+                    "Horario: " + r.getHoraInicio() + " - " + r.getHoraFin() + "\n\n" +
+                    "Por favor, prepárate para recibir los materiales y realizar la inspección correspondiente.\n\n" +
+                    "Atentamente,\nEl sistema de UTP +Lab";
+            try { 
+                emailService.enviarCorreo(correoEnc, asuntoEnc, mensajeEnc); 
+                System.out.println("✅ Correo de SALIDA enviado al Encargado: " + correoEnc);
+            } catch (Exception e) { 
+                System.out.println("❌ Error correo Encargado: " + e.getMessage()); 
             }
         }
     }

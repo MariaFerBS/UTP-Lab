@@ -1,7 +1,10 @@
 package com.integrador.lab.modelo;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -21,14 +24,20 @@ public class Laboratorio {
     @Column(name = "ubicacion_cubiculo", length = 50)
     private String ubicacionCubiculo;
 
+        // Agrega esto dentro de tu clase Laboratorio
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_encargado")
+    private Encargado encargado;
+
     public Laboratorio() {
     }
 
-    public Laboratorio(String idLab, String nombre, String tipo, String ubicacionCubiculo) {
+    public Laboratorio(String idLab, String nombre, String tipo, String ubicacionCubiculo, Encargado encargado) {
         this.idLab = idLab;
         this.nombre = nombre;
         this.tipo = tipo;
         this.ubicacionCubiculo = ubicacionCubiculo;
+        this.encargado = encargado;
     }
 
     public String getIdLab() {
@@ -62,5 +71,9 @@ public class Laboratorio {
     public void setUbicacionCubiculo(String ubicacionCubiculo) {
         this.ubicacionCubiculo = ubicacionCubiculo;
     }
+
+    // Y sus respectivos getters y setters:
+    public Encargado getEncargado() { return encargado; }
+    public void setEncargado(Encargado encargado) { this.encargado = encargado; }
 }
 
