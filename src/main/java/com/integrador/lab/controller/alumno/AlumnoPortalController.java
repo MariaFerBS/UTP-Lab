@@ -120,7 +120,6 @@ public class AlumnoPortalController {
             }
         }
 
-        // 👇 LÓGICA CORREGIDA DEL CONTADOR DIARIO 👇
         List<ReservaIntegrante> participaciones = reservaIntegranteRepositorio.findByAlumno_IdEstud(alumno.getIdEstud());
         LocalDate hoy = LocalDate.now();
         List<String> idsReservasHoy = new ArrayList<>();
@@ -145,30 +144,29 @@ public class AlumnoPortalController {
         modelo.addAttribute("limiteDiarioAlcanzado", reservasHoy >= 2);
 
         List<ReservaActivaDto> misReservas = new ArrayList<>();
-for (ReservaIntegrante ri : participaciones) {
-    Reserva r = ri.getReserva();
-    if (r != null && r.getFechaReserva() != null && !r.getFechaReserva().isBefore(LocalDate.now())) {
-        String estado = r.getEstado() != null ? r.getEstado().toUpperCase() : "";
-        if ("CONFIRMADA".equals(estado) || "EN_USO".equals(estado)) {
-            
-            // 👇 NUEVO: Obtenemos el nombre del encargado
-            String nombreEncargado = "Por asignar";
-            if (r.getLaboratorio() != null && r.getLaboratorio().getEncargado() != null) {
-                nombreEncargado = r.getLaboratorio().getEncargado().getNombre() + " " + r.getLaboratorio().getEncargado().getApellido();
-            }
+        for (ReservaIntegrante ri : participaciones) {
+            Reserva r = ri.getReserva();
+            if (r != null && r.getFechaReserva() != null && !r.getFechaReserva().isBefore(LocalDate.now())) {
+                String estado = r.getEstado() != null ? r.getEstado().toUpperCase() : "";
+                if ("CONFIRMADA".equals(estado) || "EN_USO".equals(estado)) {
+                    
+                    String nombreEncargado = "Por asignar";
+                    if (r.getLaboratorio() != null && r.getLaboratorio().getEncargado() != null) {
+                        nombreEncargado = r.getLaboratorio().getEncargado().getNombre() + " " + r.getLaboratorio().getEncargado().getApellido();
+                    }
 
-            misReservas.add(new ReservaActivaDto(
-                    r.getIdReserva(),
-                    r.getLaboratorio() != null ? r.getLaboratorio().getNombre() : "Laboratorio",
-                    r.getLaboratorio() != null ? r.getLaboratorio().getUbicacionCubiculo() : "S/C",
-                    r.getFechaReserva().toString(),
-                    r.getHoraInicio() + "–" + r.getHoraFin(),
-                    r.getEstado(),
-                    nombreEncargado // 👈 Se lo pasamos al DTO
-            ));
+                    misReservas.add(new ReservaActivaDto(
+                            r.getIdReserva(),
+                            r.getLaboratorio() != null ? r.getLaboratorio().getNombre() : "Laboratorio",
+                            r.getLaboratorio() != null ? r.getLaboratorio().getUbicacionCubiculo() : "S/C",
+                            r.getFechaReserva().toString(),
+                            r.getHoraInicio() + "–" + r.getHoraFin(),
+                            r.getEstado(),
+                            nombreEncargado
+                    ));
+                }
+            }
         }
-    }
-}
 
         modelo.addAttribute("alumno", alumno);
         modelo.addAttribute("estaBloqueado", estaBloqueado);
@@ -295,7 +293,7 @@ for (ReservaIntegrante ri : participaciones) {
         if (fecha.isBefore(LocalDate.now())) return "redirect:/alumno/laboratorios";
         if (!horaFin.isAfter(horaInicio)) return "redirect:/alumno/laboratorios";
 
-        // 1. LÍMITE DE DOS RESERVAS DIARIAS (Lógica corregida)
+        // 1. LÍMITE DE DOS RESERVAS DIARIAS
         List<ReservaIntegrante> participacionesAlumno = reservaIntegranteRepositorio.findByAlumno_IdEstud(alumnoLogueado.getIdEstud());
         List<String> idsReservasDelDia = new ArrayList<>();
 
@@ -345,15 +343,12 @@ for (ReservaIntegrante ri : participaciones) {
             }
         }
 
-                // 2. EVITAR SUPERPOSICIONES
+        // 2. EVITAR SUPERPOSICIONES
         List<Reserva> reservasDelLaboratorio = reservaRepositorio.findByLaboratorio_IdLabAndFechaReserva(idLab, fecha);
 
         for (Reserva reservaExistente : reservasDelLaboratorio) {
             String estado = reservaExistente.getEstado() == null ? "" : reservaExistente.getEstado().trim().toUpperCase();
             
-            // 👇 AQUÍ ESTÁ LA CLAVE 👇
-            // Si el estado NO es CONFIRMADA ni EN_USO, simplemente ignoramos la reserva.
-            // Esto libera automáticamente las CANCELADAS, NO_ASISTIO, DEVUELTA, etc.
             boolean reservaActiva = estado.equals("CONFIRMADA") || estado.equals("EN_USO");
             if (!reservaActiva) continue; 
 
@@ -361,7 +356,6 @@ for (ReservaIntegrante ri : participaciones) {
             LocalTime finExistente = reservaExistente.getHoraFin();
             if (inicioExistente == null || finExistente == null) continue;
 
-            // Validamos si hay cruce de horario
             boolean haySuperposicion = horaInicio.isBefore(finExistente) && horaFin.isAfter(inicioExistente);
 
             if (haySuperposicion) {
@@ -448,7 +442,7 @@ for (ReservaIntegrante ri : participaciones) {
         );
         boletaRepositorio.save(boleta);
 
-                // ⭐ ENVIAR CORREO DE CONFIRMACIÓN CON PDF ADJUNTO
+        // ⭐ ENVIAR CORREO DE CONFIRMACIÓN
         try {
             String correoDestino = alumnoLogueado.getIdEstud().toLowerCase() + "@utp.edu.pe";
             String asunto;
@@ -456,19 +450,13 @@ for (ReservaIntegrante ri : participaciones) {
 
             if (montoTotal.compareTo(BigDecimal.ZERO) > 0) {
                 asunto = "🧾 Boleta de Pago - Reserva Confirmada - UTP +Lab";
-                
                 mensaje = "Hola " + alumnoLogueado.getNombre() + ",\n\n" +
                         "ES UNA PRUEBA Tu reserva ha sido confirmada y tu pago ha sido procesado exitosamente.\n\n" +
                         "Adjunto a este correo encontrarás tu boleta en formato PDF.\n" +
                         "Recuerda llegar 10 minutos antes para tu check-in.\n\n" +
                         "Atentamente,\nEl equipo de UTP +Lab";
-
-                // Generamos el PDF
                 byte[] pdfBytes = boletaPdfService.generarPdfBoleta(boleta, nuevaReserva).readAllBytes();
-                
-                // Enviamos el correo con el PDF adjunto usando Brevo
                 emailService.enviarCorreoConAdjunto(correoDestino, asunto, mensaje, pdfBytes, "Boleta_" + idBoleta + ".pdf");
-                
             } else {
                 asunto = "ES UN CORREO DE PRUEBA ✅ Confirmación de Reserva - UTP +Lab";
                 mensaje = "Hola " + alumnoLogueado.getNombre() + ",\n\n" +
@@ -478,11 +466,8 @@ for (ReservaIntegrante ri : participaciones) {
                         "Código de Reserva: " + idReserva + "\n\n" +
                         "Recuerda llegar 10 minutos antes para tu check-in.\n\n" +
                         "Atentamente,\nEl equipo de UTP +Lab";
-                
-                // Si es gratis, enviamos el correo normal (sin adjunto)
                 emailService.enviarCorreo(correoDestino, asunto, mensaje);
             }
-
             System.out.println("✅ Correo enviado a: " + correoDestino + " | Asunto: " + asunto);
         } catch (Exception e) {
             System.out.println("❌ Error al enviar correo: " + e.getMessage());
@@ -754,6 +739,62 @@ for (ReservaIntegrante ri : participaciones) {
         return resp;
     }
 
+    @GetMapping("/api/alumnos/buscar/{codigo}")
+    @ResponseBody
+    @Transactional(readOnly = true)
+    public Map<String, Object> buscarAlumno(
+            @PathVariable("codigo") String codigo,
+            @RequestParam(value = "fecha", required = false) String fechaStr) {
+
+        Map<String, Object> resp = new HashMap<>();
+        Optional<Alumno> alumnoOpt = alumnoRepositorio.findById(codigo.trim().toUpperCase());
+
+        if (alumnoOpt.isEmpty()) {
+            resp.put("encontrado", false);
+            return resp;
+        }
+
+        Alumno alumno = alumnoOpt.get();
+        resp.put("encontrado", true);
+        resp.put("codigo", alumno.getIdEstud());
+        resp.put("nombreCompleto", alumno.getNombre() + " " + alumno.getApellido());
+
+        // Validar si está habilitado (deudas)
+        String estadoCuenta = (alumno.getEstadoCuenta() != null) ? alumno.getEstadoCuenta().trim().toUpperCase() : "";
+        boolean bloqueado = "BLOQUEADO_POR_DEUDA".equals(estadoCuenta) || estadoCuenta.contains("BLOQUEADO");
+        resp.put("habilitado", !bloqueado);
+        if (bloqueado) resp.put("motivo", "El alumno tiene deudas pendientes.");
+
+        // 👇 VALIDAR LÍMITE DE 2 RESERVAS POR FECHA 👇
+        if (fechaStr != null && !fechaStr.isEmpty()) {
+            try {
+                LocalDate fecha = LocalDate.parse(fechaStr);
+                List<ReservaIntegrante> participaciones = reservaIntegranteRepositorio.findByAlumno_IdEstud(alumno.getIdEstud());
+                List<String> idsReservasDelDia = new ArrayList<>();
+
+                for (ReservaIntegrante ri : participaciones) {
+                    Reserva r = ri.getReserva();
+                    if (r == null || r.getFechaReserva() == null || !fecha.equals(r.getFechaReserva())) continue;
+                    String estado = r.getEstado() == null ? "" : r.getEstado().trim().toUpperCase();
+                    if (!estado.equals("CANCELADA")) {
+                        if (!idsReservasDelDia.contains(r.getIdReserva())) {
+                            idsReservasDelDia.add(r.getIdReserva());
+                        }
+                    }
+                }
+
+                if (idsReservasDelDia.size() >= 2) {
+                    resp.put("habilitado", false);
+                    resp.put("motivo", "El alumno ya alcanzó el límite de 2 reservas para esta fecha.");
+                }
+            } catch (Exception e) {
+                // Ignorar si la fecha está mal formateada
+            }
+        }
+
+        return resp;
+    }
+
     @GetMapping("/api/estadisticas")
     @ResponseBody
     @Transactional(readOnly = true)
@@ -865,7 +906,7 @@ for (ReservaIntegrante ri : participaciones) {
         return resp;
     }
 
-        // =========================================================================
+    // =========================================================================
     // 8. CANCELAR RESERVA
     // =========================================================================
     @PostMapping("/reservas/{idReserva}/cancelar")
@@ -884,7 +925,7 @@ for (ReservaIntegrante ri : participaciones) {
 
         if (reservaOpt.isEmpty()) {
             redirectAttributes.addFlashAttribute("mensajeCancelacion", "No se encontró la reserva.");
-            return "redirect:/alumno/laboratorios"; // 👈 CAMBIADO
+            return "redirect:/alumno/laboratorios";
         }
 
         Reserva reserva = reservaOpt.get();
@@ -895,14 +936,14 @@ for (ReservaIntegrante ri : participaciones) {
 
         if (!participa) {
             redirectAttributes.addFlashAttribute("mensajeCancelacion", "No tienes permiso para cancelar esta reserva.");
-            return "redirect:/alumno/laboratorios"; // 👈 CAMBIADO
+            return "redirect:/alumno/laboratorios";
         }
 
         String estado = reserva.getEstado() == null ? "" : reserva.getEstado().trim().toUpperCase();
 
         if (!estado.equals("CONFIRMADA")) {
             redirectAttributes.addFlashAttribute("mensajeCancelacion", "Solo se pueden cancelar reservas confirmadas.");
-            return "redirect:/alumno/laboratorios"; // 👈 CAMBIADO
+            return "redirect:/alumno/laboratorios";
         }
 
         java.time.ZoneId zonaPeru = java.time.ZoneId.of("America/Lima");
@@ -913,13 +954,12 @@ for (ReservaIntegrante ri : participaciones) {
 
         if (inicioReserva.isBefore(limiteCancelacion)) {
             redirectAttributes.addFlashAttribute("errorReserva", "No puedes cancelar la reserva porque faltan menos de 30 minutos para su inicio.");
-            return "redirect:/alumno/laboratorios"; // 👈 CAMBIADO
+            return "redirect:/alumno/laboratorios";
         }
 
         reserva.setEstado("CANCELADA");
         reservaRepositorio.save(reserva);
 
-        // ⭐ ENVIAR CORREO DE CANCELACIÓN AL ALUMNO
         try {
             String correoDestino = alumno.getIdEstud().toLowerCase() + "@utp.edu.pe";
             String asunto = "ES UNA CORREO DE PRUEBA ❌ Reserva Cancelada - UTP +Lab";
@@ -931,18 +971,14 @@ for (ReservaIntegrante ri : participaciones) {
                     "Código de reserva: " + reserva.getIdReserva() + "\n\n" +
                     "Si no realizaste esta cancelación, por favor contacta a tu coordinador.\n\n" +
                     "Atentamente,\nEl equipo de UTP +Lab";
-
             emailService.enviarCorreo(correoDestino, asunto, mensaje);
-            System.out.println("✅ Correo de cancelación enviado a: " + correoDestino);
         } catch (Exception e) {
             System.out.println("❌ Error al enviar correo de cancelación: " + e.getMessage());
         }
 
-        // ⭐ ENVIAR CORREO DE CANCELACIÓN AL ENCARGADO
         try {
             if (reserva.getLaboratorio() != null && reserva.getLaboratorio().getEncargado() != null) {
                 com.integrador.lab.modelo.Encargado enc = reserva.getLaboratorio().getEncargado();
-                
                 String correoEncargado = enc.getIdEncargado().toLowerCase() + "@utp.edu.pe";
                 if ("E45985625".equals(enc.getIdEncargado())) correoEncargado = "U24225302@utp.edu.pe";
                 if ("E45985626".equals(enc.getIdEncargado())) correoEncargado = "U24204158@utp.edu.pe";
@@ -957,16 +993,14 @@ for (ReservaIntegrante ri : participaciones) {
                         "Horario liberado: " + reserva.getHoraInicio() + " - " + reserva.getHoraFin() + "\n\n" +
                         "El horario ha quedado libre en el sistema.\n\n" +
                         "Atentamente,\nEl sistema de UTP +Lab";
-
                 emailService.enviarCorreo(correoEncargado, asuntoEnc, mensajeEnc);
-                System.out.println("✅ Correo de cancelación enviado al Encargado: " + correoEncargado);
             }
         } catch (Exception e) {
             System.out.println("❌ Error al enviar correo al Encargado: " + e.getMessage());
         }
 
         redirectAttributes.addFlashAttribute("mensajeCancelacion", "La reserva " + idReserva + " fue cancelada correctamente.");
-        return "redirect:/alumno/laboratorios"; // 👈 CAMBIADO
+        return "redirect:/alumno/laboratorios";
     }
 
     @GetMapping("/api/notificaciones")
@@ -1010,7 +1044,7 @@ for (ReservaIntegrante ri : participaciones) {
         return notificaciones;
     }
     
-        @GetMapping("/faq")
+    @GetMapping("/faq")
     public String verFaq(HttpSession sesion, Model modelo) {
         Object usuario = sesion.getAttribute("usuarioLogueado");
         if (usuario == null) {
@@ -1049,14 +1083,14 @@ for (ReservaIntegrante ri : participaciones) {
         public String getEstado() { return estado; }
     }
 
-        public static class ReservaActivaDto {
+    public static class ReservaActivaDto {
         private String idReserva;
         private String laboratorio;
         private String cubiculo;
         private String fecha;
         private String horario;
         private String estado;
-        private String nombreEncargado; // 👈 NUEVO CAMPO
+        private String nombreEncargado;
 
         public ReservaActivaDto(String idReserva, String laboratorio, String cubiculo, String fecha, String horario, String estado, String nombreEncargado) {
             this.idReserva = idReserva;
@@ -1074,6 +1108,6 @@ for (ReservaIntegrante ri : participaciones) {
         public String getFecha() { return fecha; }
         public String getHorario() { return horario; }
         public String getEstado() { return estado; }
-        public String getNombreEncargado() { return nombreEncargado; } // 👈 GETTER
+        public String getNombreEncargado() { return nombreEncargado; }
     }
 }

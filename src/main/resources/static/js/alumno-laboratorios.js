@@ -373,6 +373,7 @@ const codigosAgregados = new Set();
       const inputNombre = document.getElementById('inputNombreAutocompletado');
 
       if (codigo.length >= 6) {
+        const fechaWizard = document.getElementById('wizardFechaEnvio').value;
         fetch('/api/alumnos/buscar/' + encodeURIComponent(codigo))
           .then(res => res.json())
           .then(data => {
