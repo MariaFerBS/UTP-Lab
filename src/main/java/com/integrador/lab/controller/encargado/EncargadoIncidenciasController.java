@@ -50,6 +50,7 @@ public class EncargadoIncidenciasController {
     @Transactional(readOnly = true)
     public String verIncidencias(
             @RequestParam(required = false) String fecha,
+            @RequestParam(required = false) String buscar, // 👈 NUEVO
             HttpSession sesion,
             Model modelo) {
 
@@ -61,13 +62,25 @@ public class EncargadoIncidenciasController {
             catch (Exception e) { fechaConsulta = java.time.LocalDate.now(); }
         }
         final java.time.LocalDate fechaFinal = fechaConsulta;
+        final String textoBusqueda = (buscar != null) ? buscar.toLowerCase().trim() : "";
 
         List<Sancion> todas = sancionRepositorio.findAll();
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
-        // SECCIÓN 1: ACTIVAS
+        // =====================================================================
+        // SECCIÓN 1: ACTIVAS (Siempre se buscan en todo el historial)
+        // =====================================================================
         List<Sancion> activas = todas.stream()
                 .filter(s -> !"RESUELTA".equalsIgnoreCase(s.getEstado()) && !"PAGADA".equalsIgnoreCase(s.getEstado()))
+                // 👇 FILTRO DE BÚSQUEDA GLOBAL 👇
+                .filter(s -> {
+                    if (textoBusqueda.isEmpty()) return true;
+                    boolean coincideAlumno = s.getAlumno() != null && (s.getAlumno().getNombre() + " " + s.getAlumno().getApellido()).toLowerCase().contains(textoBusqueda);
+                    boolean coincideCodigo = s.getAlumno() != null && s.getAlumno().getIdEstud().toLowerCase().contains(textoBusqueda);
+                    boolean coincideId = s.getIdSancion().toLowerCase().contains(textoBusqueda);
+                    boolean coincideMotivo = s.getMotivo() != null && s.getMotivo().toLowerCase().contains(textoBusqueda);
+                    return coincideAlumno || coincideCodigo || coincideId || coincideMotivo;
+                })
                 .collect(Collectors.toList());
 
         Map<String, List<Sancion>> activasPorReserva = activas.stream()
@@ -115,10 +128,21 @@ public class EncargadoIncidenciasController {
             ));
         }
 
-        // SECCIÓN 2: HISTORIAL
+        // =====================================================================
+        // SECCIÓN 2: HISTORIAL (Filtrado por fecha o búsqueda global)
+        // =====================================================================
         List<Sancion> resueltas = todas.stream()
                 .filter(s -> "RESUELTA".equalsIgnoreCase(s.getEstado()) || "PAGADA".equalsIgnoreCase(s.getEstado()))
-                .filter(s -> s.getFechaSancion() != null && s.getFechaSancion().toLocalDate().equals(fechaFinal))
+                // 👇 FILTRO POR FECHA (solo si no hay búsqueda) O POR BÚSQUEDA GLOBAL 👇
+                .filter(s -> {
+                    if (!textoBusqueda.isEmpty()) {
+                        boolean coincideAlumno = s.getAlumno() != null && (s.getAlumno().getNombre() + " " + s.getAlumno().getApellido()).toLowerCase().contains(textoBusqueda);
+                        boolean coincideId = s.getIdSancion().toLowerCase().contains(textoBusqueda);
+                        return coincideAlumno || coincideId;
+                    } else {
+                        return s.getFechaSancion() != null && s.getFechaSancion().toLocalDate().equals(fechaFinal);
+                    }
+                })
                 .collect(Collectors.toList());
 
         Map<String, List<Sancion>> resueltasPorReserva = resueltas.stream()
@@ -168,6 +192,7 @@ public class EncargadoIncidenciasController {
         modelo.addAttribute("fechaConsulta", fechaConsulta.toString());
         modelo.addAttribute("fechaAnterior", fechaConsulta.minusDays(1).toString());
         modelo.addAttribute("fechaSiguiente", fechaConsulta.plusDays(1).toString());
+        modelo.addAttribute("buscar", buscar); // 👈 Enviamos el texto al HTML
 
         return "encargado/incidencias";
     }

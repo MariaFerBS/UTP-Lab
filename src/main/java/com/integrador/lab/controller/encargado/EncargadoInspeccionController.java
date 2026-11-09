@@ -65,11 +65,11 @@ public class EncargadoInspeccionController {
     @Autowired
     private AlumnoRepository alumnoRepositorio;
 
-    // 1. VISTA PRINCIPAL
-    @GetMapping
+        @GetMapping
     @Transactional(readOnly = true)
     public String verInspeccion(
             @RequestParam(required = false) String fecha,
+            @RequestParam(required = false) String buscar, // 👈 NUEVO PARÁMETRO
             HttpSession sesion,
             Model modelo) {
 
@@ -91,13 +91,31 @@ public class EncargadoInspeccionController {
         if (inspeccionadas != null) todasLasPendientes.addAll(inspeccionadas);
 
         final java.time.LocalDate fechaFinal = fechaConsulta;
+        final String textoBusqueda = (buscar != null) ? buscar.toLowerCase().trim() : "";
 
         List<InspeccionCardDto> listaInspeccion = new ArrayList<>();
         for (Reserva r : todasLasPendientes) {
-            if (r.getFechaReserva() == null || !r.getFechaReserva().equals(fechaFinal)) continue;
-            listaInspeccion.add(convertirADto(r));
+            // 👇 SI HAY BÚSQUEDA, IGNORAMOS LA FECHA 👇
+            if (textoBusqueda.isEmpty()) {
+                if (r.getFechaReserva() == null || !r.getFechaReserva().equals(fechaFinal)) {
+                    continue; 
+                }
+            }
+
+            InspeccionCardDto dto = convertirADto(r);
+            
+            // 👇 FILTRO POR NOMBRE, LAB O CÓDIGO 👇
+            if (!textoBusqueda.isEmpty()) {
+                boolean coincide = dto.getIdReserva().toLowerCase().contains(textoBusqueda) ||
+                                   dto.getLaboratorio().toLowerCase().contains(textoBusqueda) ||
+                                   dto.getIntegrantes().stream().anyMatch(n -> n.toLowerCase().contains(textoBusqueda));
+                if (!coincide) continue;
+            }
+            
+            listaInspeccion.add(dto);
         }
 
+        // Ordenar (pendientes primero)
         listaInspeccion.sort((a, b) -> {
             boolean aEsPendiente = "DEVUELTA".equals(a.getEstado());
             boolean bEsPendiente = "DEVUELTA".equals(b.getEstado());
@@ -110,6 +128,7 @@ public class EncargadoInspeccionController {
         modelo.addAttribute("fechaConsulta", fechaConsulta.toString());
         modelo.addAttribute("fechaAnterior", fechaConsulta.minusDays(1).toString());
         modelo.addAttribute("fechaSiguiente", fechaConsulta.plusDays(1).toString());
+        modelo.addAttribute("buscar", buscar); // 👈 Enviamos al HTML
 
         return "encargado/inspeccion";
     }

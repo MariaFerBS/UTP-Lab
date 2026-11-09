@@ -49,11 +49,12 @@ public class EncargadoCheckinController {
     @Autowired
     private SancionRepository sancionRepositorio;
 
-    // 1. VISTA PRINCIPAL
+       // 1. VISTA PRINCIPAL
     @GetMapping
     @Transactional(readOnly = true)
     public String verCheckin(
             @RequestParam(required = false) String fecha,
+            @RequestParam(required = false) String buscar,
             HttpSession sesion,
             Model modelo) {
 
@@ -69,9 +70,14 @@ public class EncargadoCheckinController {
         }
 
         final java.time.LocalDate fechaFinal = fechaConsulta;
+        final String textoBusqueda = (buscar != null) ? buscar.toLowerCase().trim() : "";
 
         List<Reserva> todas = reservaRepositorio.findAll().stream()
-                .filter(r -> r.getFechaReserva() != null && r.getFechaReserva().equals(fechaFinal))
+                // 👇 SI HAY BÚSQUEDA, IGNORAMOS EL FILTRO DE FECHA 👇
+                .filter(r -> {
+                    if (!textoBusqueda.isEmpty()) return true; 
+                    return r.getFechaReserva() != null && r.getFechaReserva().equals(fechaFinal);
+                })
                 .filter(r -> !"CANCELADA".equalsIgnoreCase(r.getEstado()))
                 .sorted((a, b) -> b.getIdReserva().compareTo(a.getIdReserva()))
                 .toList();
@@ -95,6 +101,14 @@ public class EncargadoCheckinController {
             String horario = (r.getHoraInicio() != null && r.getHoraFin() != null)
                     ? r.getHoraInicio() + "–" + r.getHoraFin() : "09:00–11:00";
 
+            // 👇 FILTRO EN MEMORIA POR SI EL USUARIO BUSCA UN NOMBRE, LAB O CÓDIGO 👇
+            if (!textoBusqueda.isEmpty()) {
+                boolean coincide = r.getIdReserva().toLowerCase().contains(textoBusqueda) ||
+                                   labNombre.toLowerCase().contains(textoBusqueda) ||
+                                   nombresIntegrantes.stream().anyMatch(n -> n.toLowerCase().contains(textoBusqueda));
+                if (!coincide) continue; 
+            }
+
             listaCheckin.add(new CheckinReservaDto(
                     r.getIdReserva(),
                     labNombre,
@@ -111,6 +125,7 @@ public class EncargadoCheckinController {
         modelo.addAttribute("fechaConsulta", fechaConsulta.toString());
         modelo.addAttribute("fechaAnterior", fechaConsulta.minusDays(1).toString());
         modelo.addAttribute("fechaSiguiente", fechaConsulta.plusDays(1).toString());
+        modelo.addAttribute("buscar", buscar); // 👈 Enviamos el texto al HTML para que no se borre del input
 
         return "encargado/checkin";
     }
