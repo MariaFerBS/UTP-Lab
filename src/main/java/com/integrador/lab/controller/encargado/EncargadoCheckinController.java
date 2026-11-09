@@ -210,6 +210,7 @@ public class EncargadoCheckinController {
         Reserva r = resOpt.get();
         r.setEstado("EN_USO");
         Object userSession = sesion.getAttribute("usuarioLogueado");
+        System.out.println("DEBUG: El objeto en sesión es de tipo: " + (userSession != null ? userSession.getClass().getName() : "NULL"));
     if (userSession instanceof Encargado) {
         r.setEncargadoCheckin((Encargado) userSession);
     }
