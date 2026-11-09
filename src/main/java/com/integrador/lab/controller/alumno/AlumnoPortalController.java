@@ -145,22 +145,30 @@ public class AlumnoPortalController {
         modelo.addAttribute("limiteDiarioAlcanzado", reservasHoy >= 2);
 
         List<ReservaActivaDto> misReservas = new ArrayList<>();
-        for (ReservaIntegrante ri : participaciones) {
-            Reserva r = ri.getReserva();
-            if (r != null && r.getFechaReserva() != null && !r.getFechaReserva().isBefore(LocalDate.now())) {
-                String estado = r.getEstado() != null ? r.getEstado().toUpperCase() : "";
-                if ("CONFIRMADA".equals(estado) || "EN_USO".equals(estado)) {
-                    misReservas.add(new ReservaActivaDto(
-                            r.getIdReserva(),
-                            r.getLaboratorio() != null ? r.getLaboratorio().getNombre() : "Laboratorio",
-                            r.getLaboratorio() != null ? r.getLaboratorio().getUbicacionCubiculo() : "S/C",
-                            r.getFechaReserva().toString(),
-                            r.getHoraInicio() + "–" + r.getHoraFin(),
-                            r.getEstado()
-                    ));
-                }
+for (ReservaIntegrante ri : participaciones) {
+    Reserva r = ri.getReserva();
+    if (r != null && r.getFechaReserva() != null && !r.getFechaReserva().isBefore(LocalDate.now())) {
+        String estado = r.getEstado() != null ? r.getEstado().toUpperCase() : "";
+        if ("CONFIRMADA".equals(estado) || "EN_USO".equals(estado)) {
+            
+            // 👇 NUEVO: Obtenemos el nombre del encargado
+            String nombreEncargado = "Por asignar";
+            if (r.getLaboratorio() != null && r.getLaboratorio().getEncargado() != null) {
+                nombreEncargado = r.getLaboratorio().getEncargado().getNombre() + " " + r.getLaboratorio().getEncargado().getApellido();
             }
+
+            misReservas.add(new ReservaActivaDto(
+                    r.getIdReserva(),
+                    r.getLaboratorio() != null ? r.getLaboratorio().getNombre() : "Laboratorio",
+                    r.getLaboratorio() != null ? r.getLaboratorio().getUbicacionCubiculo() : "S/C",
+                    r.getFechaReserva().toString(),
+                    r.getHoraInicio() + "–" + r.getHoraFin(),
+                    r.getEstado(),
+                    nombreEncargado // 👈 Se lo pasamos al DTO
+            ));
         }
+    }
+}
 
         modelo.addAttribute("alumno", alumno);
         modelo.addAttribute("estaBloqueado", estaBloqueado);
@@ -736,6 +744,12 @@ public class AlumnoPortalController {
             resp.put("metodoPago", "GRATUITO");
             resp.put("fechaEmision", "—");
         }
+
+        String nombreEncargado = "Por asignar";
+        if (r.getLaboratorio() != null && r.getLaboratorio().getEncargado() != null) {
+            nombreEncargado = r.getLaboratorio().getEncargado().getNombre() + " " + r.getLaboratorio().getEncargado().getApellido();
+        }
+        resp.put("nombreEncargado", nombreEncargado);
         
         return resp;
     }
@@ -1035,21 +1049,23 @@ public class AlumnoPortalController {
         public String getEstado() { return estado; }
     }
 
-    public static class ReservaActivaDto {
+        public static class ReservaActivaDto {
         private String idReserva;
         private String laboratorio;
         private String cubiculo;
         private String fecha;
         private String horario;
         private String estado;
+        private String nombreEncargado; // 👈 NUEVO CAMPO
 
-        public ReservaActivaDto(String idReserva, String laboratorio, String cubiculo, String fecha, String horario, String estado) {
+        public ReservaActivaDto(String idReserva, String laboratorio, String cubiculo, String fecha, String horario, String estado, String nombreEncargado) {
             this.idReserva = idReserva;
             this.laboratorio = laboratorio;
             this.cubiculo = cubiculo;
             this.fecha = fecha;
             this.horario = horario;
             this.estado = estado;
+            this.nombreEncargado = nombreEncargado;
         }
 
         public String getIdReserva() { return idReserva; }
@@ -1058,5 +1074,6 @@ public class AlumnoPortalController {
         public String getFecha() { return fecha; }
         public String getHorario() { return horario; }
         public String getEstado() { return estado; }
+        public String getNombreEncargado() { return nombreEncargado; } // 👈 GETTER
     }
 }

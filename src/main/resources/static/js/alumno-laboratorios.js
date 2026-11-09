@@ -688,6 +688,12 @@ function abrirModalResumen(tarjeta) {
             if (data.estado === 'CONFIRMADA') estadoBadge.classList.add('confirmada');
             else if (data.estado === 'EN_USO') estadoBadge.classList.add('enuso');
             
+            // 👇 AGREGAR EL ENCARGADO A LA VISTA 👇
+            const lblEncargado = document.getElementById('resumenEncargado');
+            if (lblEncargado) {
+                lblEncargado.innerText = data.nombreEncargado || 'Por asignar';
+            }
+            
             const contInteg = document.getElementById('resumenIntegrantes');
             contInteg.innerHTML = '';
             data.integrantes.forEach(i => {
@@ -718,7 +724,6 @@ function abrirModalResumen(tarjeta) {
                     `);
                 });
             }
-            // 👇 ACTUALIZAR LA TARJETA EN VIVO
             actualizarEstadoReservaEnVivo(idReserva, data.estado);
         });
 }
